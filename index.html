@@ -319,7 +319,24 @@ const parseCredit=band=>{const m={A:720,B:680,C:640,D:600,E:0};return m[band]||0
 const creditBand=score=>{if(score>=720)return'A';if(score>=680)return'B';if(score>=640)return'C';if(score>=600)return'D';return'E';};
 const statusColors={lead:'badge-pending',qualified:'badge-active',submitted:'badge-active',approved:'badge-approved',funded:'badge-approved',lost:'badge-rejected'};
 
-async function connect(){const url=$('sbUrl').value.trim(),key=$('sbKey').value.trim();if(!url||!key){$('connectError').textContent='Please enter both URL and key.';return;}try{sb=window.supabase.createClient(url,key);const{data,error}=await sb.auth.getSession();if(error)throw error;if(!data.session){const{data:ga,error:ge}=await sb.auth.signInAnonymously();if(ge)throw ge;user=ga.user;}else user=data.session.user;$('loginPanel').classList.add('hidden');$('connectionStatus').textContent='Connected • '+user.id.slice(0,8)+'...';showToast('Connected successfully!','success');await loadAll();startSubscriptions();}catch(e){$('connectError').textContent=e.message||'Connection failed';console.error(e);}}
+async function connect(){
+  const url=$('sbUrl').value.trim(),key=$('sbKey').value.trim();
+  if(!url||!key){$('connectError').textContent='Please enter both URL and key.';return;}
+  try{
+    sb=window.supabase.createClient(url,key);
+    // Test connection by querying agents table (no auth required for anon key)
+    const{data,error}=await sb.from('agents').select('count').limit(1);
+    if(error)throw error;
+    $('loginPanel').classList.add('hidden');
+    $('connectionStatus').textContent='Connected';
+    showToast('Connected successfully!','success');
+    await loadAll();
+    startSubscriptions();
+  }catch(e){
+    $('connectError').textContent=e.message||'Connection failed';
+    console.error(e);
+  }
+}
 
 async function loadAll(){await Promise.all([loadDeals(),loadLenders(),loadDealers(),loadAgents(),loadActions()]);updateDashboard();renderAll();}
 
