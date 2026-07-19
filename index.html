@@ -13,387 +13,530 @@
 *{box-sizing:border-box;}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;transition:background .2s,color .2s;}
 #app{display:flex;min-height:100vh;}
 .sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;transition:background .2s,border-color .2s;}
-.sidebar .logo{padding:0 20px 16px;font-size:18px;font-weight:700;color:var(--ledger);letter-spacing:-0.5px;display:flex;align-items:center;gap:8px;}
-.sidebar .logo svg{width:24px;height:24px;fill:var(--ledger);}
-.sidebar nav{flex:1;}
-.sidebar nav a{display:flex;align-items:center;gap:10px;padding:8px 16px;margin:2px 12px;border-radius:var(--radius);color:var(--text-dim);text-decoration:none;font-size:13px;font-weight:500;transition:background .15s,color .15s;cursor:pointer;}
-.sidebar nav a:hover{background:var(--surface-hover);color:var(--text);}
-.sidebar nav a.active{background:var(--ledger-light);color:var(--ledger);font-weight:600;}
-.sidebar nav a svg{width:16px;height:16px;opacity:.7;}
-.sidebar .footer{padding:12px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);}
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
-.topbar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;}
-.topbar .search{position:relative;width:280px;}
-.topbar .search input{width:100%;padding:8px 12px 8px 32px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s;}
-.topbar .search input:focus{border-color:var(--ledger);box-shadow:0 0 0 3px var(--ledger-light);}
-.topbar .search::before{content:"🔍";position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;opacity:.5;}
-.topbar .actions{display:flex;gap:8px;align-items:center;}
-.btn{padding:8px 14px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:transform .05s,opacity .15s;}
-.btn:active{transform:scale(0.98);}
-.btn-primary{background:var(--ledger);color:#fff;}
-.btn-primary:hover{background:var(--ledger-hover);}
-.btn-secondary{background:var(--surface-hover);color:var(--text);border:1px solid var(--border);}
-.btn-secondary:hover{background:var(--border);}
-.btn-danger{background:var(--danger-light);color:var(--danger);border:1px solid var(--danger);}
-.btn-sm{padding:5px 10px;font-size:12px;}
-.content{flex:1;padding:24px;overflow-y:auto;}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);}
-.card h2{margin:0 0 16px;font-size:16px;font-weight:600;}
-.card h3{margin:0 0 10px;font-size:14px;font-weight:600;color:var(--text-dim);}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
-.stat-card .value{font-size:28px;font-weight:700;color:var(--ledger);letter-spacing:-0.5px;}
-.stat-card .label{font-size:12px;color:var(--text-dim);margin-top:4px;}
-.stat-card .change{font-size:11px;color:var(--success);margin-top:2px;}
+.brand{font-size:16px;font-weight:700;letter-spacing:-0.01em;color:var(--text);padding:0 20px 2px;}
+.brand-sub{font-family:var(--font-mono);font-size:9.5px;color:var(--text-dim);padding:0 20px 18px;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1px solid var(--border);margin-bottom:10px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;margin:0 8px;cursor:pointer;color:var(--text-dim);font-size:13.5px;font-weight:500;border-radius:6px;border-left:3px solid transparent;transition:background .12s,color .12s;}
+.nav-item:hover{background:var(--surface-hover);color:var(--text);}
+.nav-item.active{background:var(--ledger-light);color:var(--ledger);border-left-color:var(--ledger);font-weight:600;}
+.nav-item .nav-icon{font-size:11px;width:16px;text-align:center;opacity:.6;}.nav-item.active .nav-icon{opacity:1;}
+.sidebar-footer{margin-top:auto;padding:12px 20px 0;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;color:var(--text-dim);}
+.main{flex:1;padding:28px 32px;max-width:1200px;overflow-y:auto;}
+.page-header{margin-bottom:20px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.page-header h1{font-size:24px;font-weight:700;letter-spacing:-0.01em;margin:4px 0 0;}
+.eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:0.08em;color:var(--text-dim);text-transform:uppercase;}
+.tab-section{display:none;}.tab-section.active{display:block;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-sm);transition:background .2s,border-color .2s;}
+.panel+.panel{margin-top:14px;}
+.panel-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin:0 0 14px;display:flex;align-items:center;justify-content:space-between;}
+.panel-title-lg{font-size:17px;font-weight:700;color:var(--text);margin:0 0 14px;}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}@media(max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr);}}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-sm);}
+.stat-num{font-family:var(--font-mono);font-size:22px;font-weight:600;color:var(--text);}.stat-num.is-money{color:var(--ledger);}
+.stat-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;}
+button{font-family:var(--font-body);cursor:pointer;}
+.btn{background:var(--ledger);color:#fff;border:none;padding:8px 14px;border-radius:6px;font-weight:600;font-size:13px;letter-spacing:0.01em;display:inline-flex;align-items:center;gap:6px;}
+.btn:hover{background:var(--ledger-hover);}
+.btn-ghost{background:transparent;color:var(--text-dim);border:1px solid var(--border);padding:7px 12px;border-radius:6px;font-size:12px;}
+.btn-ghost:hover{color:var(--text);border-color:var(--text-dim);}
+.btn-sm{padding:5px 10px;font-size:11px;}.btn-danger{color:var(--danger);border-color:var(--danger);}.btn-danger:hover{background:var(--danger-light);}
+.btn-success{background:var(--success);color:#fff;}.btn-success:hover{filter:brightness(1.1);}
+.btn-warn{background:var(--warning);color:#1C1B19;}
+label{display:block;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-family:var(--font-body);font-size:13px;margin-bottom:10px;transition:border-color .12s,background .2s;}
+textarea{resize:vertical;min-height:60px;font-family:var(--font-mono);font-size:12px;}
+input:focus,select:focus,textarea:focus{outline:1.5px solid var(--ledger);border-color:var(--ledger);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;}@media(max-width:600px){.form-grid{grid-template-columns:1fr;}}
 table{width:100%;border-collapse:collapse;font-size:13px;}
-th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);}
-th{font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.3px;background:var(--bg);position:sticky;top:0;}
-tr:hover td{background:var(--surface-hover);}
-.badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
-.badge-pending{background:var(--warning);color:#fff;}
-.badge-approved{background:var(--success);color:#fff;}
-.badge-rejected{background:var(--danger);color:#fff;}
-.badge-draft{background:var(--text-muted);color:#fff;}
-.badge-active{background:var(--ledger);color:#fff;}
-.badge-inactive{background:var(--text-muted);color:#fff;}
-.tag{display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:500;background:var(--bg);border:1px solid var(--border);color:var(--text-dim);margin:1px;}
-.empty-state{text-align:center;padding:48px 24px;color:var(--text-muted);}
-.empty-state svg{width:48px;height:48px;margin-bottom:12px;opacity:.3;}
-.empty-state h3{margin:0 0 8px;font-size:16px;color:var(--text-dim);}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s;}
-.modal.show{opacity:1;pointer-events:auto;}
-.modal .card{max-width:520px;width:90%;max-height:90vh;overflow-y:auto;}
-.modal .card h2{margin-bottom:20px;}
-.form-group{margin-bottom:16px;}
-.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s,box-shadow .2s;}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--ledger);box-shadow:0 0 0 3px var(--ledger-light);}
-.form-group textarea{min-height:80px;resize:vertical;}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.queue-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;transition:background .15s;cursor:pointer;}
-.queue-item:hover{background:var(--surface-hover);}
-.queue-item .info{flex:1;}
-.queue-item .info .title{font-weight:600;font-size:13px;}
-.queue-item .info .meta{font-size:11px;color:var(--text-muted);margin-top:2px;}
-.queue-item .actions{display:flex;gap:6px;}
-.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
-.filter-bar .btn{height:32px;}
-.filter-bar .btn.active{background:var(--ledger);color:#fff;}
-.pipeline-stage{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;}
-.pipeline-stage .stage{min-width:200px;flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;}
-.pipeline-stage .stage h4{margin:0 0 8px;font-size:12px;font-weight:600;text-transform:uppercase;color:var(--text-dim);display:flex;justify-content:space-between;}
-.pipeline-stage .stage .count{background:var(--bg);padding:2px 8px;border-radius:999px;font-size:11px;}
-.pipeline-card{padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;font-size:12px;cursor:pointer;transition:transform .1s,box-shadow .1s;}
-.pipeline-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-md);}
-.pipeline-card .title{font-weight:600;margin-bottom:4px;}
-.pipeline-card .meta{color:var(--text-muted);font-size:11px;}
-.deal-detail{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
-.deal-detail .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
-.deal-detail .header h3{margin:0;font-size:16px;}
-.inline-edit{padding:4px 8px;border:1px solid transparent;border-radius:4px;background:transparent;cursor:text;transition:border-color .2s,background .2s;}
-.inline-edit:hover{border-color:var(--border);background:var(--bg);}
-.inline-edit:focus{border-color:var(--ledger);background:var(--surface);outline:none;box-shadow:0 0 0 3px var(--ledger-light);}
-.progress-bar{height:6px;background:var(--bg);border-radius:999px;overflow:hidden;}
-.progress-bar .fill{height:100%;background:var(--ledger);border-radius:999px;transition:width .3s ease;}
-.credit-budget{margin-bottom:16px;}
-.credit-budget .label{display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:6px;}
-.credit-budget .bar{height:8px;background:var(--bg);border-radius:999px;overflow:hidden;}
-.credit-budget .bar .fill{height:100%;border-radius:999px;transition:width .3s ease;}
-.credit-budget .bar .fill.safe{background:var(--success);}
-.credit-budget .bar .fill.warn{background:var(--warning);}
-.credit-budget .bar .fill.danger{background:var(--danger);}
-.toggle{display:flex;align-items:center;gap:8px;cursor:pointer;}
-.toggle-switch{width:40px;height:22px;background:var(--border);border-radius:999px;position:relative;transition:background .2s;}
-.toggle-switch::after{content:"";position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
-.toggle input{display:none;}
-.toggle input:checked+.toggle-switch{background:var(--ledger);}
-.toggle input:checked+.toggle-switch::after{transform:translateX(18px);}
-.toast{position:fixed;bottom:20px;right:20px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:10px;z-index:200;transform:translateY(80px);opacity:0;transition:transform .3s,opacity .3s;}
-.toast.show{transform:translateY(0);opacity:1;}
-.toast.success{border-left:4px solid var(--success);}
-.toast.error{border-left:4px solid var(--danger);}
-.toast.info{border-left:4px solid var(--ledger);}
-.login-panel{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:300;}
-.login-panel .card{width:380px;text-align:center;}
-.login-panel .card h1{margin:0 0 8px;font-size:22px;}
-.login-panel .card p{color:var(--text-dim);margin-bottom:20px;}
-.login-panel .card input{width:100%;margin-bottom:12px;}
-.login-panel .card .btn{width:100%;justify-content:center;}
-.hidden{display:none !important;}
-.tab-content{display:none;}
-.tab-content.active{display:block;animation:fadeIn .2s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+th{text-align:left;padding:8px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}tr:hover td{background:var(--surface-hover);}tr:last-child td{border-bottom:none;}
+.td-actions{text-align:right;white-space:nowrap;}
+.inline-input{background:var(--bg);border:1px solid var(--ledger);padding:4px 8px;border-radius:4px;font-size:13px;margin:0;width:auto;min-width:80px;}
+.inline-select{background:var(--bg);border:1px solid var(--ledger);padding:4px 8px;border-radius:4px;font-size:13px;margin:0;width:auto;}
+.badge{display:inline-block;font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:0.04em;padding:2px 8px;border-radius:3px;border:1px solid currentColor;background:color-mix(in srgb,currentColor 10%,transparent);}
+.chip{padding:5px 12px;border-radius:20px;border:1px solid var(--border);font-size:12px;color:var(--text-dim);background:transparent;cursor:pointer;transition:all .12s;}
+.chip:hover{border-color:var(--text-dim);}.chip.active{background:var(--text);color:#fff;border-color:var(--text);}
+.filter-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.deal-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--trucking);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow-sm);cursor:pointer;}
+.deal-card:hover{border-color:var(--ledger);}.deal-card .header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.deal-card .name{font-weight:600;font-size:14px;color:var(--text);}.deal-card .meta{font-size:12px;color:var(--text-dim);margin-top:3px;}
+.deal-card .amount{font-family:var(--font-mono);color:var(--ledger);font-weight:600;font-size:14px;}
+.deal-card .details{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.deal-card.expanded .details{display:block;}
+.queue-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;box-shadow:var(--shadow-sm);}
+.queue-card .agent-name{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;}
+.queue-card .title{font-weight:600;font-size:15px;color:var(--text);margin:4px 0 8px;}
+.queue-card .body{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap;font-family:var(--font-mono);background:var(--bg);padding:10px 12px;border-radius:6px;margin:8px 0;border:1px solid var(--border);}
+.queue-card .actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.budget-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.budget-name{width:100px;font-size:13px;font-weight:500;color:var(--text);flex-shrink:0;}
+.budget-bar{flex:1;height:20px;background:var(--bg);border-radius:10px;overflow:hidden;border:1px solid var(--border);position:relative;}
+.budget-fill{height:100%;border-radius:10px;background:var(--ledger);transition:width .3s ease;}
+.budget-fill.warning{background:var(--warning);}.budget-fill.danger{background:var(--danger);}
+.budget-text{width:90px;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);text-align:right;flex-shrink:0;}
+.empty-state{text-align:center;padding:40px 16px;color:var(--text-dim);font-size:13px;}
+.empty-state .empty-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;}
+.empty-state .empty-sub{font-size:12.5px;color:var(--text-dim);margin-bottom:16px;max-width:400px;margin-left:auto;margin-right:auto;}
+.modal-overlay{position:fixed;inset:0;background:rgba(28,27,25,0.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;width:100%;max-width:580px;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg);}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;}
+.modal-header h2{margin:0;font-size:17px;font-weight:700;color:var(--text);}
+.modal-close{background:none;border:none;font-size:22px;color:var(--text-dim);cursor:pointer;padding:2px 6px;}
+.modal-close:hover{color:var(--text);}.modal-body{padding:18px 20px;}.modal-actions{display:flex;gap:8px;margin-top:6px;}
+::-webkit-scrollbar{width:8px;height:8px;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+@media(max-width:760px){
+  #app{flex-direction:column;}.main{padding:16px;max-width:100%;}.stat-grid{grid-template-columns:repeat(2,1fr);}
+  .sidebar{position:fixed;left:0;right:0;bottom:0;width:100%;height:auto;flex-direction:row;align-items:stretch;padding:0;border-right:none;border-top:1px solid var(--border);z-index:900;overflow-x:auto;}
+  .sidebar .brand,.sidebar .brand-sub,.sidebar .sidebar-footer{display:none;}
+  .nav-item{flex:1;flex-direction:column;gap:2px;padding:8px 2px;font-size:9.5px;text-align:center;border-left:none;border-top:3px solid transparent;white-space:nowrap;}
+  .nav-item.active{border-left:none;border-top-color:var(--ledger);}
+  #btnSignOut{flex:1;margin:0;width:auto;height:auto;border:none;border-top:3px solid transparent;border-radius:0;background:none;color:var(--text-dim);font-size:9.5px;padding:8px 2px;}
+  .fab{bottom:76px;right:16px;}.page-header{flex-direction:column;align-items:flex-start;gap:8px;}
+}
+
+/* Config panel from original */
+.config-banner{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow-sm);}
+.config-banner .cfg-title{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text);}
+.config-row{display:flex;gap:12px;margin-bottom:10px;align-items:center;flex-wrap:wrap;}
+.config-row label{font-size:12px;width:70px;color:var(--text-dim);text-transform:none;letter-spacing:0;}
+.config-row input{flex:1;min-width:200px;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:var(--font-mono);margin:0;}
+.config-row button{padding:8px 16px;background:var(--ledger);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;}
+.connected{color:var(--success);font-size:12px;margin-top:4px;}
+.error{color:var(--danger);font-size:12px;margin-top:4px;}
 </style>
 </head>
 <body>
-<div id="app">
-  <aside class="sidebar" id="sidebar">
-    <div class="logo">
-      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-      3E Command
-    </div>
-    <nav id="nav">
-      <a href="#" data-tab="dashboard" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
-      <a href="#" data-tab="pipeline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Pipeline</a>
-      <a href="#" data-tab="lenders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Lenders</a>
-      <a href="#" data-tab="dealers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Dealers</a>
-      <a href="#" data-tab="customers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Customers</a>
-      <a href="#" data-tab="queue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Queue</a>
-      <a href="#" data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>
-    </nav>
-    <div class="footer" id="connectionStatus">Disconnected</div>
-  </aside>
+
+<div id="app" style="display:flex;">
+  <div class="sidebar">
+    <div class="brand">3E</div>
+    <div class="brand-sub">COMMAND CENTER</div>
+    <div class="nav-item active" data-tab="dashboard"><span class="nav-icon">◈</span>Dashboard</div>
+    <div class="nav-item" data-tab="pipeline"><span class="nav-icon">◈</span>Pipeline</div>
+    <div class="nav-item" data-tab="lenders"><span class="nav-icon">◈</span>Lenders</div>
+    <div class="nav-item" data-tab="dealers"><span class="nav-icon">◈</span>Dealers</div>
+    <div class="nav-item" data-tab="customers"><span class="nav-icon">◈</span>Customers</div>
+    <div class="nav-item" data-tab="queue"><span class="nav-icon">◈</span>Queue <span id="queueBadge" style="display:none;background:var(--danger);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:auto;"></span></div>
+    <div class="nav-item" data-tab="settings"><span class="nav-icon">◈</span>Settings</div>
+    <div class="sidebar-footer" id="clock"></div>
+    <button id="btnSignOut" class="nav-item" style="border-left:none;border-top:1px solid var(--border);border-radius:0;margin:0;padding:10px 20px;color:var(--text-dim);" onclick="doSignOut()"><span class="nav-icon">⇥</span>Sign Out</button>
+  </div>
 
   <div class="main">
-    <div class="topbar">
-      <div class="search"><input type="text" id="searchInput" placeholder="Search deals, lenders, customers..."></div>
-      <div class="actions">
-        <button class="btn btn-secondary btn-sm" id="themeToggle">🌙</button>
-        <button class="btn btn-primary btn-sm" id="newDealBtn">+ New Deal</button>
+
+    <!-- PASSWORD LOGIN -->
+    <div id="loginPanel" class="config-banner" style="text-align:center;max-width:400px;margin:60px auto;">
+      <div class="cfg-title" style="font-size:18px;margin-bottom:8px;">🔐 3E Command Center</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-bottom:18px;">Enter your password to access the dashboard</div>
+      <div class="config-row" style="justify-content:center;">
+        <input type="password" id="loginPassword" placeholder="Password" style="flex:none;width:220px;text-align:center;" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="config-row" style="justify-content:center;margin-bottom:4px;">
+        <button onclick="doLogin()">Enter</button>
+      </div>
+      <div id="loginStatus"></div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="tab-section active" id="tab-dashboard" style="display:none;">
+      <div class="page-header"><div><div class="eyebrow">Overview</div><h1>Dashboard</h1></div><button class="btn" id="btnNewDealQuick">+ New Deal</button></div>
+      <div class="stat-grid" id="dashStats"></div>
+      <div class="panel"><div class="panel-title">Pipeline Funnel</div><div id="dashFunnel"></div></div>
+      <div class="panel"><div class="panel-title">Needs Attention</div><div id="dashAttention"></div></div>
+      <div class="panel"><div class="panel-title">Recent Activity</div><div id="dashActivity"></div></div>
+    </div>
+
+    <!-- PIPELINE -->
+    <div class="tab-section" id="tab-pipeline">
+      <div class="page-header"><div><div class="eyebrow">Deals</div><h1>Pipeline</h1></div><button class="btn" id="btnNewDeal">+ New Deal</button></div>
+      <div class="filter-row">
+        <button class="chip active" data-status="all">All</button>
+        <button class="chip" data-status="inquiry">Inquiry</button>
+        <button class="chip" data-status="outreach_sent">Outreach</button>
+        <button class="chip" data-status="docs_requested">Docs</button>
+        <button class="chip" data-status="submitted">Submitted</button>
+        <button class="chip" data-status="lender_review">Review</button>
+        <button class="chip" data-status="terms_issued">Terms</button>
+        <button class="chip" data-status="funded">Funded</button>
+        <button class="chip" data-status="closed_lost">Lost</button>
+      </div>
+      <div id="pipelineList"></div>
+    </div>
+
+    <!-- LENDERS -->
+    <div class="tab-section" id="tab-lenders">
+      <div class="page-header"><div><div class="eyebrow">Funding Sources</div><h1>Lenders</h1></div><button class="btn" id="btnNewLender">+ New Lender</button></div>
+      <div class="panel" style="padding:0;overflow-x:auto;">
+        <table id="lendersTable"><thead><tr><th>Name</th><th>Min–Max</th><th>Credit Floor</th><th>States</th><th>Equipment</th><th>Commission</th><th>Fund Days</th><th>Active</th><th style="width:90px;"></th></tr></thead><tbody></tbody></table>
       </div>
     </div>
 
-    <div class="content" id="content">
-      <div class="tab-content active" id="tab-dashboard">
-        <div class="grid" id="dashboardStats">
-          <div class="stat-card"><div class="value" id="statDeals">—</div><div class="label">Total Deals</div><div class="change" id="statDealsChange">+0 this week</div></div>
-          <div class="stat-card"><div class="value" id="statVolume">—</div><div class="label">Pipeline Volume</div><div class="change" id="statVolumeChange">+0 this week</div></div>
-          <div class="stat-card"><div class="value" id="statApproval">—</div><div class="label">Approval Rate</div><div class="change" id="statApprovalChange">+0 this week</div></div>
-          <div class="stat-card"><div class="value" id="statQueue">—</div><div class="label">Queue Pending</div><div class="change" id="statQueueChange">—</div></div>
-        </div>
-        <div class="card" style="margin-top:16px;">
-          <h2>Recent Activity</h2>
-          <div id="recentActivity"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><h3>No recent activity</h3><p>Connect to Supabase to see live updates.</p></div></div>
-        </div>
-      </div>
-
-      <div class="tab-content" id="tab-pipeline">
-        <div class="filter-bar" id="pipelineFilters">
-          <button class="btn btn-sm active" data-filter="all">All</button>
-          <button class="btn btn-sm btn-secondary" data-filter="lead">Lead</button>
-          <button class="btn btn-sm btn-secondary" data-filter="qualified">Qualified</button>
-          <button class="btn btn-sm btn-secondary" data-filter="submitted">Submitted</button>
-          <button class="btn btn-sm btn-secondary" data-filter="approved">Approved</button>
-          <button class="btn btn-sm btn-secondary" data-filter="funded">Funded</button>
-          <button class="btn btn-sm btn-secondary" data-filter="lost">Lost</button>
-        </div>
-        <div class="card">
-          <h2>Pipeline</h2>
-          <div id="pipelineContent"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><h3>No deals yet</h3><p>Add your first deal to see the pipeline.</p></div></div>
-        </div>
-      </div>
-
-      <div class="tab-content" id="tab-lenders">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <h2 style="margin:0;">Lenders</h2>
-          <button class="btn btn-primary btn-sm" id="newLenderBtn">+ New Lender</button>
-        </div>
-        <div class="card" id="lendersCard"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><h3>No lenders yet</h3><p>Add lenders to see their credit boxes.</p></div></div>
-      </div>
-
-      <div class="tab-content" id="tab-dealers">
-        <div class="card">
-          <h2>Dealers</h2>
-          <div id="dealersContent"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg><h3>No dealers yet</h3><p>Add dealer partners to track referrals.</p></div></div>
-        </div>
-      </div>
-
-      <div class="tab-content" id="tab-customers">
-        <div class="card">
-          <h2>Customers</h2>
-          <div id="customersContent"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><h3>No customers yet</h3><p>Deals will appear grouped by customer name.</p></div></div>
-        </div>
-      </div>
-
-      <div class="tab-content" id="tab-queue">
-        <div class="card">
-          <h2>Approval Queue</h2>
-          <div id="queueContent"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><h3>Queue is empty</h3><p>Agent actions awaiting approval will appear here.</p></div></div>
-        </div>
-      </div>
-
-      <div class="tab-content" id="tab-settings">
-        <div class="card">
-          <h2>Settings</h2>
-          <h3>Appearance</h3>
-          <label class="toggle" style="margin-bottom:16px;">
-            <input type="checkbox" id="darkModeToggle">
-            <span class="toggle-switch"></span>
-            <span>Dark Mode</span>
-          </label>
-          <h3>Credit Budgets</h3>
-          <div id="creditBudgets"><div class="empty-state" style="padding:24px;"><p>Connect to see agent credit budgets.</p></div></div>
-          <h3 style="margin-top:24px;">Agent Status</h3>
-          <div id="agentStatus"><div class="empty-state" style="padding:24px;"><p>Connect to see agent status.</p></div></div>
-        </div>
+    <!-- DEALERS -->
+    <div class="tab-section" id="tab-dealers">
+      <div class="page-header"><div><div class="eyebrow">Partners</div><h1>Dealers</h1></div><button class="btn" id="btnNewDealer">+ New Dealer</button></div>
+      <div class="panel" style="padding:0;overflow-x:auto;">
+        <table id="dealersTable"><thead><tr><th>Business</th><th>Contact</th><th>Vertical</th><th>State</th><th>Status</th><th>Last Contact</th><th style="width:90px;"></th></tr></thead><tbody></tbody></table>
       </div>
     </div>
+
+    <!-- CUSTOMERS -->
+    <div class="tab-section" id="tab-customers">
+      <div class="page-header"><div><div class="eyebrow">Prospects</div><h1>Customers</h1></div></div>
+      <div id="customersList"></div>
+    </div>
+
+    <!-- QUEUE -->
+    <div class="tab-section" id="tab-queue">
+      <div class="page-header">
+        <div><div class="eyebrow">Agent Actions</div><h1>Approval Queue</h1></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm" onclick="triggerAgent('sales')" title="Run Sales Agent">🤖 Sales</button>
+          <button class="btn btn-sm" onclick="triggerAgent('credit')" title="Run Credit Agent">🤖 Credit</button>
+          <button class="btn btn-sm" onclick="triggerAgent('lender')" title="Run Lender Match Agent">🤖 Lender</button>
+          <button class="btn btn-sm" onclick="triggerAgent('marketing')" title="Run Marketing Agent">🤖 Marketing</button>
+          <button class="btn btn-sm" onclick="triggerAgent('operations')" title="Run Operations Agent">🤖 Ops</button>
+          <button class="btn btn-sm" onclick="triggerAgent('ceo')" title="Run CEO Agent">🤖 CEO</button>
+        </div>
+      </div>
+      <div class="filter-row">
+        <button class="chip active" data-qfilter="pending">Pending</button>
+        <button class="chip" data-qfilter="approved">Approved</button>
+        <button class="chip" data-qfilter="declined">Declined</button>
+        <button class="chip" data-qfilter="all">All</button>
+      </div>
+      <div id="queueList"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="tab-section" id="tab-settings">
+      <div class="page-header"><div><div class="eyebrow">Preferences</div><h1>Settings</h1></div></div>
+      <div class="panel"><div class="panel-title-lg">Appearance</div><div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;"><span style="font-size:13px;">Dark mode</span><button class="btn-ghost btn-sm" id="btnToggleTheme" style="margin:0;">Switch</button></div></div>
+      <div class="panel"><div class="panel-title-lg">AI Agent Credit Budgets</div><div id="agentBudgets"></div></div>
+      <div class="panel"><div class="panel-title-lg">Agent Status</div><div id="agentStatus"></div></div>
+    </div>
+
   </div>
-</div>
 
-<div class="modal" id="newDealModal">
-  <div class="card">
-    <h2>New Deal</h2>
-    <div class="form-row">
-      <div class="form-group"><label>Prospect Name</label><input type="text" id="ndName" placeholder="e.g. Acme Construction"></div>
-      <div class="form-group"><label>Business Name</label><input type="text" id="ndBusiness" placeholder="e.g. Acme LLC"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Equipment Type</label>
-        <select id="ndEquipment"><option value="">Select...</option><option>Dump Truck</option><option>Excavator</option><option>Boom Lift</option><option>Box Truck</option><option>Semi Tractor</option><option>Trailer</option><option>Medical Imaging</option><option>Other</option></select>
+  <button class="btn fab" id="fabNewDeal">+ New Deal</button>
+
+  <!-- DEAL MODAL -->
+  <div class="modal-overlay" id="dealModal"><div class="modal"><div class="modal-header"><h2 id="dealModalTitle">New Deal</h2><button class="modal-close" id="dealModalClose">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div><label>Prospect Name *</label><input id="dProspectName" placeholder="John Smith"></div>
+        <div><label>Business Name</label><input id="dBusinessName" placeholder="Smith Trucking LLC"></div>
+        <div><label>Email</label><input id="dEmail" type="email" placeholder="john@example.com"></div>
+        <div><label>Phone</label><input id="dPhone" placeholder="555-123-4567"></div>
+        <div><label>State</label><select id="dState"><option value="">— Select —</option>
+          <option value="AL">AL</option><option value="AK">AK</option><option value="AZ">AZ</option><option value="AR">AR</option>
+          <option value="CA">CA</option><option value="CO">CO</option><option value="CT">CT</option><option value="DE">DE</option>
+          <option value="FL">FL</option><option value="GA">GA</option><option value="HI">HI</option><option value="ID">ID</option>
+          <option value="IL">IL</option><option value="IN">IN</option><option value="IA">IA</option><option value="KS">KS</option>
+          <option value="KY">KY</option><option value="LA">LA</option><option value="ME">ME</option><option value="MD">MD</option>
+          <option value="MA">MA</option><option value="MI">MI</option><option value="MN">MN</option><option value="MS">MS</option>
+          <option value="MO">MO</option><option value="MT">MT</option><option value="NE">NE</option><option value="NV">NV</option>
+          <option value="NH">NH</option><option value="NJ">NJ</option><option value="NM">NM</option><option value="NY">NY</option>
+          <option value="NC">NC</option><option value="ND">ND</option><option value="OH">OH</option><option value="OK">OK</option>
+          <option value="OR">OR</option><option value="PA">PA</option><option value="RI">RI</option><option value="SC">SC</option>
+          <option value="SD">SD</option><option value="TN">TN</option><option value="TX">TX</option><option value="UT">UT</option>
+          <option value="VT">VT</option><option value="VA">VA</option><option value="WA">WA</option><option value="WV">WV</option>
+          <option value="WI">WI</option><option value="WY">WY</option>
+        </select></div>
+        <div><label>Amount Requested ($)</label><input id="dAmount" type="number" placeholder="75000"></div>
+        <div><label>Credit Band</label><select id="dCreditBand"><option value="unknown">Unknown</option><option value="poor">Poor</option><option value="fair">Fair</option><option value="good">Good</option><option value="excellent">Excellent</option></select></div>
+        <div><label>Time in Business (months)</label><input id="dTimeBiz" type="number" placeholder="36"></div>
+        <div><label>Annual Revenue ($)</label><input id="dRevenue" type="number" placeholder="500000"></div>
+        <div><label>Equipment Type</label><select id="dEquipType"><option value="">— Select —</option><option value="truck">Truck</option><option value="construction">Construction</option><option value="medical">Medical</option><option value="other">Other</option></select></div>
+        <div><label>Equipment Description</label><input id="dEquipDesc" placeholder="2023 Freightliner Cascadia"></div>
       </div>
-      <div class="form-group"><label>Amount ($)</label><input type="number" id="ndAmount" placeholder="50000"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>State</label>
-        <select id="ndState"><option value="">Select...</option><option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option><option>CO</option><option>CT</option><option>DE</option><option>FL</option><option>GA</option><option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option><option>KS</option><option>KY</option><option>LA</option><option>ME</option><option>MD</option><option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option><option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option><option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option><option>OK</option><option>OR</option><option>PA</option><option>RI</option><option>SC</option><option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option><option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option></select>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="dEquipNew" style="width:auto;margin:0;"> New Equipment</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="dEquipLiquid" style="width:auto;margin:0;"> Liquid Asset</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="dCreditAuth" style="width:auto;margin:0;"> Credit Auth Obtained</label>
       </div>
-      <div class="form-group"><label>Credit Band</label>
-        <select id="ndCredit"><option value="">Select...</option><option>A (720+)</option><option>B (680-719)</option><option>C (640-679)</option><option>D (600-639)</option><option>E (<600)</option></select>
+      <label>Dealer Referral</label><select id="dDealerId"><option value="">— None —</option></select>
+      <label>Source</label><select id="dSource"><option value="dealer_referral">Dealer Referral</option><option value="inbound_web">Inbound Web</option><option value="outbound">Outbound</option></select>
+      <label>Notes</label><textarea id="dNotes" placeholder="Any additional context..."></textarea>
+      <div class="modal-actions"><button class="btn" id="btnSaveDeal">Save Deal</button><button class="btn-ghost" id="btnCancelDeal">Cancel</button></div>
+    </div>
+  </div></div>
+
+  <!-- LENDER MODAL -->
+  <div class="modal-overlay" id="lenderModal"><div class="modal"><div class="modal-header"><h2 id="lenderModalTitle">New Lender</h2><button class="modal-close" id="lenderModalClose">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div><label>Lender Name *</label><input id="lName" placeholder="FastFund Capital"></div>
+        <div><label>Contact Email</label><input id="lEmail" type="email" placeholder="rep@lender.com"></div>
+        <div><label>Min Amount ($)</label><input id="lMin" type="number" placeholder="10000"></div>
+        <div><label>Max Amount ($)</label><input id="lMax" type="number" placeholder="500000"></div>
+        <div><label>Credit Floor</label><select id="lCreditFloor"><option value="unknown">Unknown</option><option value="poor">Poor</option><option value="fair">Fair</option><option value="good">Good</option><option value="excellent">Excellent</option></select></div>
+        <div><label>Commission Rate (decimal)</label><input id="lCommission" type="number" step="0.0001" placeholder="0.0200"></div>
+        <div><label>Avg Funding Days</label><input id="lFundDays" type="number" placeholder="5"></div>
+        <div><label>Equipment Types (comma-separated)</label><input id="lEquipTypes" placeholder="truck, construction, medical"></div>
+        <div><label>States Served (comma-separated, or ALL)</label><input id="lStates" placeholder="CA, TX, FL or ALL"></div>
       </div>
-    </div>
-    <div class="form-group"><label>Notes</label><textarea id="ndNotes" placeholder="Any additional details..."></textarea></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;">
-      <button class="btn btn-secondary" onclick="closeModal('newDealModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="submitNewDeal()">Create Deal</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal" id="newLenderModal">
-  <div class="card">
-    <h2>New Lender</h2>
-    <div class="form-group"><label>Lender Name</label><input type="text" id="nlName" placeholder="e.g. Commercial Credit"></div>
-    <div class="form-row">
-      <div class="form-group"><label>Min Amount ($)</label><input type="number" id="nlMin" placeholder="10000"></div>
-      <div class="form-group"><label>Max Amount ($)</label><input type="number" id="nlMax" placeholder="500000"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Credit Floor</label>
-        <select id="nlCredit"><option value="">Select...</option><option>A (720+)</option><option>B (680-719)</option><option>C (640-679)</option><option>D (600-639)</option><option>E (<600)</option></select>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin:6px 0;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="lStartup" style="width:auto;margin:0;"> Accepts Startups</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="lNewOnly" style="width:auto;margin:0;"> New Equipment Only</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="lActive" checked style="width:auto;margin:0;"> Active</label>
       </div>
-      <div class="form-group"><label>Commission Rate (%)</label><input type="number" id="nlCommission" placeholder="2.5" step="0.1"></div>
+      <label>Restrictions / Notes</label><textarea id="lNotes" placeholder="Special requirements, quirks, turnaround notes..."></textarea>
+      <div class="modal-actions"><button class="btn" id="btnSaveLender">Save Lender</button><button class="btn-ghost" id="btnCancelLender">Cancel</button></div>
     </div>
-    <div class="form-group"><label>States Served (comma-separated)</label><input type="text" id="nlStates" placeholder="TX, FL, CA, NY"></div>
-    <div class="form-group"><label>Equipment Types (comma-separated)</label><input type="text" id="nlEquipment" placeholder="Dump Truck, Excavator, Box Truck"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;">
-      <button class="btn btn-secondary" onclick="closeModal('newLenderModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="submitNewLender()">Create Lender</button>
+  </div></div>
+
+  <!-- DEALER MODAL -->
+  <div class="modal-overlay" id="dealerModal"><div class="modal"><div class="modal-header"><h2 id="dealerModalTitle">New Dealer</h2><button class="modal-close" id="dealerModalClose">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div><label>Business Name *</label><input id="dlBusinessName" placeholder="Texas Truck Sales"></div>
+        <div><label>Contact Name</label><input id="dlContactName" placeholder="Bob Wilson"></div>
+        <div><label>Contact Email</label><input id="dlContactEmail" type="email" placeholder="bob@example.com"></div>
+        <div><label>Contact Phone</label><input id="dlContactPhone" placeholder="555-123-4567"></div>
+        <div><label>Vertical</label><select id="dlVertical"><option value="">— Select —</option><option value="trucking">Trucking</option><option value="construction">Construction</option><option value="medical">Medical</option><option value="general">General</option></select></div>
+        <div><label>State</label><input id="dlState" placeholder="TX" maxlength="2"></div>
+        <div><label>Status</label><select id="dlStatus"><option value="prospect">Prospect</option><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+        <div><label>Referral Rate (decimal)</label><input id="dlReferralRate" type="number" step="0.0001" placeholder="0.0050"></div>
+      </div>
+      <label>Notes</label><textarea id="dlNotes" placeholder="Relationship notes..."></textarea>
+      <div class="modal-actions"><button class="btn" id="btnSaveDealer">Save Dealer</button><button class="btn-ghost" id="btnCancelDealer">Cancel</button></div>
     </div>
-  </div>
-</div>
+  </div></div>
 
-<div class="modal" id="dealDetailModal">
-  <div class="card" style="max-width:640px;">
-    <h2>Deal Details</h2>
-    <div id="dealDetailContent"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
-      <button class="btn btn-secondary" onclick="closeModal('dealDetailModal')">Close</button>
-      <button class="btn btn-primary" onclick="saveDealDetails()">Save Changes</button>
-    </div>
-  </div>
 </div>
-
-<div class="login-panel" id="loginPanel">
-  <div class="card">
-    <h1>3E Command Center</h1>
-    <p>Connect to your Supabase project to begin.</p>
-    <div class="form-group"><label>Supabase URL</label><input type="text" id="sbUrl" value="https://dmcuqawpteypgfcgrwdl.supabase.co" placeholder="https://your-project.supabase.co"></div>
-    <div class="form-group"><label>Supabase Anon Key</label><input type="password" id="sbKey" placeholder="eyJ..."></div>
-    <button class="btn btn-primary" onclick="connect()" id="connectBtn">Connect</button>
-    <div id="connectError" style="color:var(--danger);font-size:12px;margin-top:10px;"></div>
-  </div>
-</div>
-
-<div class="toast" id="toast"><span id="toastMsg"></span></div>
 
 <script>
-let sb, user, tables={}, subs=[], currentTab='dashboard', editingDeal=null, editingLender=null;
-const $=id=>document.getElementById(id);
-const showToast=(msg,type='info')=>{const t=$('toast');t.className='toast '+type;$('toastMsg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);};
-const openModal=id=>$(id).classList.add('show');
-const closeModal=id=>{$(id).classList.remove('show');if(id==='newDealModal'){['ndName','ndBusiness','ndEquipment','ndAmount','ndState','ndCredit','ndNotes'].forEach(i=>$(i).value='');}if(id==='newLenderModal'){['nlName','nlMin','nlMax','nlCredit','nlCommission','nlStates','nlEquipment'].forEach(i=>$(i).value='');}};
-const fmtMoney=n=>n?new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n):'$0';
-const fmtDate=d=>d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
-const parseCredit=band=>{const m={A:720,B:680,C:640,D:600,E:0};return m[band]||0;};
-const creditBand=score=>{if(score>=720)return'A';if(score>=680)return'B';if(score>=640)return'C';if(score>=600)return'D';return'E';};
-const statusColors={lead:'badge-pending',qualified:'badge-active',submitted:'badge-active',approved:'badge-approved',funded:'badge-approved',lost:'badge-rejected'};
+const DEAL_STATUS_ORDER=['inquiry','outreach_sent','outreach_approved','docs_requested','docs_collected','submitted','lender_review','terms_issued','terms_accepted','funded','commission_paid','closed_lost','do_not_contact'];
+const DEAL_STATUS_LABELS={inquiry:'Inquiry',outreach_sent:'Outreach Sent',outreach_approved:'Outreach Approved',docs_requested:'Docs Requested',docs_collected:'Docs Collected',submitted:'Submitted',lender_review:'Lender Review',terms_issued:'Terms Issued',terms_accepted:'Terms Accepted',funded:'Funded',commission_paid:'Commission Paid',closed_lost:'Closed Lost',do_not_contact:'DNC'};
+const CREDIT_BANDS=['unknown','poor','fair','good','excellent'];
+const EQUIPMENT_TYPES=['truck','construction','medical','other'];
 
-async function connect(){
-  const url=$('sbUrl').value.trim(),key=$('sbKey').value.trim();
-  if(!url||!key){$('connectError').textContent='Please enter both URL and key.';return;}
-  try{
-    sb=window.supabase.createClient(url,key);
-    // Test connection by querying agents table (no auth required for anon key)
-    const{data,error}=await sb.from('agents').select('count').limit(1);
-    if(error)throw error;
-    $('loginPanel').classList.add('hidden');
-    $('connectionStatus').textContent='Connected';
-    showToast('Connected successfully!','success');
-    await loadAll();
-    startSubscriptions();
-  }catch(e){
-    $('connectError').textContent=e.message||'Connection failed';
-    console.error(e);
-  }
+let supabaseClient=null,currentUser=null,deals=[],lenders=[],dealers=[],agents=[],agentActions=[];
+let currentTab='dashboard',pipelineFilter='all',queueFilter='pending',editingDealId=null,editingLenderId=null,editingDealerId=null,realtimeChannels=[],isConnected=false;
+
+function $(id){return document.getElementById(id);}
+function fmtMoney(n){n=Number(n)||0;return '$'+n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});}
+function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function daysSince(ts){if(!ts)return Infinity;return Math.floor((Date.now()-new Date(ts))/86400000);}
+function statusColor(status){const c={inquiry:'#3B5D8A',outreach_sent:'#5A7DAA',outreach_approved:'#6B9BD6',docs_requested:'#C49A1A',docs_collected:'#D4B840',submitted:'#2A6E74',lender_review:'#4BA8B0',terms_issued:'#1F4D3A',terms_accepted:'#3B8A5E',funded:'#2D7A4F',commission_paid:'#1F4D3A',closed_lost:'#B3432E',do_not_contact:'#6B675F'};return c[status]||'#6B675F';}
+function statusBadge(status){const col=statusColor(status);return`<span class="badge" style="color:${col};border-color:${col};">${DEAL_STATUS_LABELS[status]||status}</span>`;}
+function toast(msg){const el=document.createElement('div');el.textContent=msg;el.style.cssText='position:fixed;top:20px;right:20px;z-index:2000;background:var(--ledger);color:#fff;padding:10px 16px;border-radius:6px;font-size:13px;box-shadow:var(--shadow-md);';document.body.appendChild(el);setTimeout(()=>el.remove(),2500);}
+
+// ========== LOGIN & CONNECT ==========
+const SUPABASE_URL='https://dmcuqawpteypgfcgrwdl.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtY3VxYXdwdGV5cGdmY2dyd2RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzNDc0NDAsImV4cCI6MjA5OTkyMzQ0MH0.-tPVYhRCE9JyCOLHFrgQz4KLhNawtdQcL4z3WGJTyN4';
+const LOGIN_PASSWORD='3E2026!';
+
+async function doLogin(){
+  const pw=$('loginPassword').value.trim(),status=$('loginStatus');
+  if(pw!==LOGIN_PASSWORD){status.innerHTML='<div class="error">Invalid password</div>';return;}
+  status.innerHTML='';
+  localStorage.setItem('3e_session','auth_'+Date.now());
+  await doConnect();
 }
 
-async function loadAll(){await Promise.all([loadDeals(),loadLenders(),loadDealers(),loadAgents(),loadActions()]);updateDashboard();renderAll();}
+async function doConnect(){
+  try{
+    const {createClient}=window.supabase;supabaseClient=createClient(SUPABASE_URL,SUPABASE_KEY);
+    const {data,error}=await supabaseClient.from('agents').select('count').limit(1);
+    if(error)throw error;
+    $('loginPanel').style.display='none';
+    document.querySelectorAll('.tab-section').forEach(s=>s.style.removeProperty('display'));
+    goToTab('dashboard');isConnected=true;
+    await loadAllData();setupRealtime();renderAll();tickClock();setInterval(tickClock,60000);
+  }catch(err){$('loginStatus').innerHTML='<div class="error">✕ '+err.message+'</div>';}
+}
 
-async function loadDeals(){const{data,error}=await sb.from('deals').select('*').order('created_at',{ascending:false});if(error){console.error('deals',error);return;}tables.deals=data||[];}
-async function loadLenders(){const{data,error}=await sb.from('lenders').select('*').order('name');if(error){console.error('lenders',error);return;}tables.lenders=data||[];}
-async function loadDealers(){const{data,error}=await sb.from('dealers').select('*').order('name');if(error){console.error('dealers',error);return;}tables.dealers=data||[];}
-async function loadAgents(){const{data,error}=await sb.from('agents').select('*').order('name');if(error){console.error('agents',error);return;}tables.agents=data||[];}
-async function loadActions(){const{data,error}=await sb.from('agent_actions').select('*').order('created_at',{ascending:false});if(error){console.error('actions',error);return;}tables.actions=data||[];}
+// Auto-connect from session
+(function autoConnect(){
+  const session=localStorage.getItem('3e_session');
+  if(session){$('loginPanel').style.display='none';doConnect();}
+})();
 
-function startSubscriptions(){subs.forEach(s=>s.unsubscribe());subs=[];const t=['deals','lenders','dealers','agents','agent_actions'];t.forEach(tbl=>{const c=sb.channel(tbl+'-changes').on('postgres_changes',{event:'*',schema:'public',table:tbl},payload=>{console.log('Realtime',tbl,payload);handleRealtime(tbl,payload);}).subscribe();subs.push(c);});}
-function handleRealtime(table,payload){if(payload.eventType==='INSERT'){if(!tables[table])tables[table]=[];tables[table].unshift(payload.new);}else if(payload.eventType==='UPDATE'){const idx=tables[table].findIndex(r=>r.id===payload.new.id);if(idx>=0)tables[table][idx]=payload.new;else tables[table].push(payload.new);}else if(payload.eventType==='DELETE'){tables[table]=tables[table].filter(r=>r.id!==payload.old.id);}renderAll();updateDashboard();}
+function tickClock(){const n=new Date();const el=$('clock');if(el)el.textContent=n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});}
 
-function updateDashboard(){const d=tables.deals||[],a=tables.actions||[];const total=d.length,vol=d.reduce((s,x)=>s+(x.amount||0),0),app=d.filter(x=>x.status==='approved'||x.status==='funded').length,pending=a.filter(x=>x.status==='pending').length;const rate=total?Math.round((app/total)*100)+'%':'0%';$('statDeals').textContent=total;$('statVolume').textContent=fmtMoney(vol);$('statApproval').textContent=rate;$('statQueue').textContent=pending;const act=d.slice(0,5).map(x=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span><strong>${x.customer_name||x.business_name||'Unnamed'}</strong> — ${x.status}</span><span style="color:var(--text-muted);font-size:12px;">${fmtDate(x.created_at)}</span></div>`).join('')||'<div class="empty-state" style="padding:16px;"><p>No recent deals</p></div>';$('recentActivity').innerHTML=act;}
+async function loadAllData(){
+  try{
+    const[dRes,lRes,dlRes,aRes,actRes]=await Promise.all([
+      supabaseClient.from('deals').select('*').is('deleted_at',null).order('created_at',{ascending:false}),
+      supabaseClient.from('lenders').select('*').order('name'),
+      supabaseClient.from('dealers').select('*').order('business_name'),
+      supabaseClient.from('agents').select('*').order('name'),
+      supabaseClient.from('agent_actions').select('*,agents(name,display_name)').order('created_at',{ascending:false}).limit(100)
+    ]);
+    if(dRes.error)console.error('deals',dRes.error);if(lRes.error)console.error('lenders',lRes.error);if(dlRes.error)console.error('dealers',dlRes.error);if(aRes.error)console.error('agents',aRes.error);if(actRes.error)console.error('actions',actRes.error);
+    deals=dRes.data||[];lenders=lRes.data||[];dealers=dlRes.data||[];agents=aRes.data||[];agentActions=actRes.data||[];
+  }catch(e){console.error('loadAllData',e);}
+}
+async function refreshTable(table){
+  try{const res=await supabaseClient.from(table).select('*');if(res.error){console.error('refresh',table,res.error);return;}
+    if(table==='deals')deals=res.data||[];if(table==='lenders')lenders=res.data||[];if(table==='dealers')dealers=res.data||[];if(table==='agents')agents=res.data||[];
+    renderAll();
+  }catch(e){console.error('refreshTable',e);}
+}
+function setupRealtime(){
+  realtimeChannels.forEach(ch=>supabaseClient.removeChannel(ch));realtimeChannels=[];
+  const tables=['deals','lenders','dealers','agents','agent_actions'];
+  tables.forEach(table=>{const ch=supabaseClient.channel('public:'+table).on('postgres_changes',{event:'*',schema:'public',table:table},payload=>handleRealtimeChange(table,payload)).subscribe(status=>{if(status!=='SUBSCRIBED')console.log('Realtime '+table+':',status);});realtimeChannels.push(ch);});
+}
+function handleRealtimeChange(table,payload){
+  const{eventType,new:newRow,old:oldRow}=payload;
+  if(table==='deals'){if(eventType==='INSERT')deals.unshift(newRow);if(eventType==='UPDATE')deals=deals.map(d=>d.id===newRow.id?newRow:d);if(eventType==='DELETE')deals=deals.filter(d=>d.id!==oldRow.id);}
+  if(table==='lenders'){if(eventType==='INSERT')lenders.push(newRow);if(eventType==='UPDATE')lenders=lenders.map(l=>l.id===newRow.id?newRow:l);if(eventType==='DELETE')lenders=lenders.filter(l=>l.id!==oldRow.id);}
+  if(table==='dealers'){if(eventType==='INSERT')dealers.push(newRow);if(eventType==='UPDATE')dealers=dealers.map(d=>d.id===newRow.id?newRow:d);if(eventType==='DELETE')dealers=dealers.filter(d=>d.id!==oldRow.id);}
+  if(table==='agents'){if(eventType==='INSERT')agents.push(newRow);if(eventType==='UPDATE')agents=agents.map(a=>a.id===newRow.id?newRow:a);if(eventType==='DELETE')agents=agents.filter(a=>a.id!==oldRow.id);}
+  if(table==='agent_actions'){if(eventType==='INSERT')agentActions.unshift(newRow);if(eventType==='UPDATE')agentActions=agentActions.map(a=>a.id===newRow.id?newRow:a);if(eventType==='DELETE')agentActions=agentActions.filter(a=>a.id!==oldRow.id);}
+  renderAll();
+}
 
-function renderAll(){renderPipeline();renderLenders();renderDealers();renderCustomers();renderQueue();renderSettings();}
+// ========== NAV ==========
+function goToTab(tab){currentTab=tab;document.querySelectorAll('.nav-item').forEach(i=>i.classList.toggle('active',i.dataset.tab===tab));document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));$('tab-'+tab).classList.add('active');renderAll();}
+document.querySelectorAll('.nav-item').forEach(item=>{item.addEventListener('click',()=>goToTab(item.dataset.tab));});
 
-function renderPipeline(){const filter=$('pipelineFilters').querySelector('.active').dataset.filter;const deals=(tables.deals||[]).filter(d=>filter==='all'||d.status===filter);const stages=['lead','qualified','submitted','approved','funded','lost'];if(!deals.length&&filter==='all'){$('pipelineContent').innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><h3>No deals yet</h3><p>Add your first deal to see the pipeline.</p></div>';return;}const byStage={};stages.forEach(s=>byStage[s]=[]);deals.forEach(d=>{byStage[d.status||'lead'].push(d);});const html=stages.map(s=>{const list=byStage[s].map(d=>`<div class="pipeline-card" onclick="openDealDetail('${d.id}')"><div class="title">${d.customer_name||d.business_name||'Unnamed'}</div><div class="meta">${fmtMoney(d.amount)} • ${d.equipment_type||'—'} • ${d.state||'—'}</div></div>`).join('');return`<div class="stage"><h4>${s.charAt(0).toUpperCase()+s.slice(1)}<span class="count">${byStage[s].length}</span></h4>${list||'<div style="color:var(--text-muted);font-size:12px;padding:8px;text-align:center;">Empty</div>'}</div>`;}).join('');$('pipelineContent').innerHTML=`<div class="pipeline-stage">${html}</div>`;}
+// ========== RENDER: DASHBOARD ==========
+function renderDashboard(){
+  if(!isConnected)return;
+  const active=deals.filter(d=>d.status!=='funded'&&d.status!=='commission_paid'&&d.status!=='closed_lost'&&d.status!=='do_not_contact');
+  const pipelineValue=active.reduce((s,d)=>s+Number(d.amount_requested||0),0);
+  const pendingActions=agentActions.filter(a=>a.status==='pending').length;
+  const fundedMonth=deals.filter(d=>{if(d.status!=='funded'&&d.status!=='commission_paid')return false;const fd=d.commission_paid_at||d.status_changed_at;if(!fd)return false;const f=new Date(fd);const n=new Date();return f.getMonth()===n.getMonth()&&f.getFullYear()===n.getFullYear();});
+  const commissionMonth=fundedMonth.reduce((s,d)=>s+Number(d.commission_amount||0),0);
+  $('dashStats').innerHTML=`<div class="stat-card"><div class="stat-num">${active.length}</div><div class="stat-label">Active Deals</div></div><div class="stat-card"><div class="stat-num is-money">${fmtMoney(pipelineValue)}</div><div class="stat-label">Pipeline Value</div></div><div class="stat-card"><div class="stat-num is-money">${fmtMoney(commissionMonth)}</div><div class="stat-label">Commission This Month</div></div><div class="stat-card"><div class="stat-num" style="color:var(--danger);">${pendingActions}</div><div class="stat-label">Pending Approvals</div></div>`;
+  const funnel=DEAL_STATUS_ORDER.filter(s=>s!=='do_not_contact').map(s=>{const inStage=deals.filter(d=>d.status===s);return{status:s,amount:inStage.reduce((sum,d)=>sum+Number(d.amount_requested||0),0),count:inStage.length};});
+  const maxAmt=Math.max(...funnel.map(f=>f.amount),1);
+  $('dashFunnel').innerHTML=funnel.map(f=>{const pct=Math.round((f.amount/maxAmt)*100);return`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><div style="width:120px;font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;flex-shrink:0;">${DEAL_STATUS_LABELS[f.status]}</div><div style="flex:1;background:var(--surface-hover);border-radius:4px;height:20px;overflow:hidden;"><div style="height:100%;border-radius:4px;background:${statusColor(f.status)};width:${pct}%;transition:width .3s;"></div></div><div style="width:130px;text-align:right;font-family:var(--font-mono);font-size:12px;flex-shrink:0;">${fmtMoney(f.amount)} <span style="color:var(--text-dim);">(${f.count})</span></div></div>`;}).join('');
+  const stale=active.filter(d=>daysSince(d.status_changed_at)>7).sort((a,b)=>daysSince(a.status_changed_at)-daysSince(b.status_changed_at)).slice(0,5);
+  const attEl=$('dashAttention');
+  if(stale.length===0){attEl.innerHTML='<div class="empty-state"><div class="empty-title">All caught up</div><div class="empty-sub">No deals are stale. Everything has been touched in the last 7 days.</div></div>';}
+  else{attEl.innerHTML=stale.map(d=>{const days=daysSince(d.status_changed_at);return`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);"><div><div style="font-weight:600;font-size:14px;">${escapeHtml(d.prospect_name)}</div><div style="font-size:12px;color:var(--text-dim);">${escapeHtml(d.business_name||'')} · ${statusBadge(d.status)}</div></div><div style="font-family:var(--font-mono);font-size:12px;color:var(--danger);white-space:nowrap;">${days}d stale</div></div>`;}).join('');}
+  const recentEvents=[];deals.filter(d=>d.notes&&Array.isArray(d.notes)).forEach(d=>{d.notes.forEach(n=>{if(n.at)recentEvents.push({ts:n.at,type:'note',text:`${escapeHtml(d.prospect_name)}: ${n.from_status||'?'} → ${n.to_status||'?'}`,dealId:d.id});});});
+  agentActions.filter(a=>a.status!=='pending').slice(0,10).forEach(a=>{recentEvents.push({ts:a.decided_at||a.created_at,type:'action',text:`${a.agents?.display_name||'Agent'} ${a.status}: ${a.content_title||a.action_type}`,dealId:a.deal_id});});
+  recentEvents.sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  const actEl=$('dashActivity');
+  if(recentEvents.length===0){actEl.innerHTML='<div class="empty-state">No recent activity. Actions and status changes will appear here.</div>';}
+  else{actEl.innerHTML=recentEvents.slice(0,10).map(e=>{const d=new Date(e.ts);const label=d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' · '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});return`<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;"><span style="font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);display:block;margin-bottom:2px;">${label}</span>${e.text}</div>`;}).join('');}
+}
 
-function renderLenders(){const lenders=tables.lenders||[];if(!lenders.length){$('lendersCard').innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><h3>No lenders yet</h3><p>Add lenders to see their credit boxes.</p></div>';return;}const rows=lenders.map(l=>`<tr><td><strong>${l.name}</strong></td><td>${fmtMoney(l.min_amount)} — ${fmtMoney(l.max_amount)}</td><td>${l.credit_band_floor||'—'}</td><td>${(l.states_served||[]).map(s=>`<span class="tag">${s}</span>`).join('')}</td><td>${(l.equipment_types||[]).map(e=>`<span class="tag">${e}</span>`).join('')}</td><td>${l.commission_rate||'—'}%</td><td><span class="badge badge-${l.active?'active':'inactive'}">${l.active?'Active':'Inactive'}</span></td><td><button class="btn btn-sm btn-secondary" onclick="editLender('${l.id}')">Edit</button></td></tr>`).join('');$('lendersCard').innerHTML=`<table><thead><tr><th>Name</th><th>Range</th><th>Credit Floor</th><th>States</th><th>Equipment</th><th>Commission</th><th>Status</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table>`;}
+// ========== RENDER: PIPELINE ==========
+function renderPipeline(){
+  if(!isConnected)return;
+  const el=$('pipelineList');let shown=deals.slice();if(pipelineFilter!=='all')shown=shown.filter(d=>d.status===pipelineFilter);
+  shown=shown.sort((a,b)=>{const ai=DEAL_STATUS_ORDER.indexOf(a.status),bi=DEAL_STATUS_ORDER.indexOf(b.status);if(ai!==bi)return ai-bi;return new Date(b.created_at)-new Date(a.created_at);});
+  if(shown.length===0){el.innerHTML=`<div class="empty-state"><div class="empty-title">No deals found</div><div class="empty-sub">${pipelineFilter==='all'?'Add your first deal to get started.':'No deals in this status. Try another filter.'}</div><button class="btn btn-sm" onclick="openDealModal()">+ Add Deal</button></div>`;return;}
+  el.innerHTML=shown.map(d=>{const dealer=dealers.find(dl=>dl.id===d.dealer_id);const expanded=editingDealId===d.id;return`<div class="deal-card ${expanded?'expanded':''}" style="border-left-color:${statusColor(d.status)};" data-id="${d.id}"><div class="header" onclick="toggleDealExpand('${d.id}')"><div style="flex:1;"><div class="name">${escapeHtml(d.prospect_name)} ${d.business_name?'<span style="color:var(--text-dim);font-weight:400;">· '+escapeHtml(d.business_name)+'</span>':''}</div><div class="meta">${statusBadge(d.status)} · ${fmtMoney(d.amount_requested)} · ${escapeHtml(d.state_code||'—')} · ${escapeHtml(d.equipment_type||'—')}</div>${dealer?'<div class="meta">Referral: '+escapeHtml(dealer.business_name)+'</div>':''}</div><div class="amount" style="flex-shrink:0;">${fmtMoney(d.amount_requested)}</div></div><div class="details"><div class="form-grid" style="margin-top:4px;"><div><label>Prospect Name</label><input class="inline-input" value="${escapeHtml(d.prospect_name)}" onchange="updateDeal('${d.id}','prospect_name',this.value)"></div><div><label>Business Name</label><input class="inline-input" value="${escapeHtml(d.business_name||'')}" onchange="updateDeal('${d.id}','business_name',this.value)"></div><div><label>Email</label><input class="inline-input" value="${escapeHtml(d.prospect_email||'')}" onchange="updateDeal('${d.id}','prospect_email',this.value)"></div><div><label>Phone</label><input class="inline-input" value="${escapeHtml(d.prospect_phone||'')}" onchange="updateDeal('${d.id}','prospect_phone',this.value)"></div><div><label>State</label><input class="inline-input" value="${escapeHtml(d.state_code||'')}" maxlength="2" onchange="updateDeal('${d.id}','state_code',this.value.toUpperCase())"></div><div><label>Amount</label><input class="inline-input" type="number" value="${d.amount_requested||''}" onchange="updateDeal('${d.id}','amount_requested',this.value)"></div><div><label>Status</label><select class="inline-select" onchange="updateDeal('${d.id}','status',this.value)">${DEAL_STATUS_ORDER.map(s=>`<option value="${s}" ${d.status===s?'selected':''}>${DEAL_STATUS_LABELS[s]}</option>`).join('')}</select></div><div><label>Credit Band</label><select class="inline-select" onchange="updateDeal('${d.id}','credit_score_band',this.value)">${CREDIT_BANDS.map(b=>`<option value="${b}" ${d.credit_score_band===b?'selected':''}>${b}</option>`).join('')}</select></div></div><div style="display:flex;gap:8px;margin-top:10px;"><button class="btn-ghost btn-sm" onclick="openDealEdit('${d.id}')">Edit Full</button><button class="btn-ghost btn-sm btn-danger" onclick="deleteDeal('${d.id}')">Delete</button></div></div></div>`;}).join('');
+}
+function toggleDealExpand(id){editingDealId=editingDealId===id?null:id;renderPipeline();}
+async function updateDeal(id,field,value){try{const update={[field]:value};if(field==='status')update.status_changed_at=new Date().toISOString();const{error}=await supabaseClient.from('deals').update(update).eq('id',id);if(error){console.error('updateDeal',error);toast('Update failed');}else{toast('Saved');}}catch(e){console.error(e);toast('Update failed');}}
+async function deleteDeal(id){if(!confirm('Delete this deal?'))return;try{const{error}=await supabaseClient.from('deals').update({deleted_at:new Date().toISOString()}).eq('id',id);if(error){console.error(error);toast('Delete failed');}else{deals=deals.filter(d=>d.id!==id);renderAll();toast('Deal deleted');}}catch(e){console.error(e);toast('Delete failed');}}
 
-function renderDealers(){const dealers=tables.dealers||[];if(!dealers.length){$('dealersContent').innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg><h3>No dealers yet</h3><p>Add dealer partners to track referrals.</p></div>';return;}const rows=dealers.map(d=>`<tr><td><strong>${d.name}</strong></td><td>${d.vertical||'—'}</td><td>${d.contact_email||'—'}</td><td><span class="badge badge-${d.active?'active':'inactive'}">${d.active?'Active':'Inactive'}</span></td><td>${fmtDate(d.last_contact_date)}</td><td><button class="btn btn-sm btn-secondary" onclick="editDealer('${d.id}')">Edit</button></td></tr>`).join('');$('dealersContent').innerHTML=`<table><thead><tr><th>Name</th><th>Vertical</th><th>Email</th><th>Status</th><th>Last Contact</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table>`;}
+// ========== RENDER: LENDERS ==========
+function renderLenders(){
+  if(!isConnected)return;const tbody=$('lendersTable').querySelector('tbody');
+  if(lenders.length===0){tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="empty-title">No lenders yet</div><div class="empty-sub">Add your first lender to start matching deals.</div></div></td></tr>`;return;}
+  tbody.innerHTML=lenders.map(l=>`<tr data-id="${l.id}"><td><input class="inline-input" style="min-width:140px;" value="${escapeHtml(l.name)}" onchange="updateLender('${l.id}','name',this.value)"></td><td>${fmtMoney(l.amount_min)}–${fmtMoney(l.amount_max)}</td><td><select class="inline-select" onchange="updateLender('${l.id}','credit_band_floor',this.value)">${CREDIT_BANDS.map(b=>`<option value="${b}" ${b===l.credit_band_floor?'selected':''}>${b}</option>`).join('')}</select></td><td>${(l.states_served||[]).join(', ')||'ALL'}</td><td>${(l.equipment_types||[]).join(', ')||'ALL'}</td><td>${((l.commission_rate||0)*100).toFixed(2)}%</td><td>${l.avg_funding_days||'—'}</td><td><span class="badge" style="color:${l.is_active?'var(--success)':'var(--danger')};">${l.is_active?'Active':'Inactive'}</span></td><td class="td-actions"><button class="btn-ghost btn-sm btn-danger" onclick="deleteLender('${l.id}')">Delete</button></td></tr>`).join('');
+}
+async function updateLender(id,field,value){try{const{error}=await supabaseClient.from('lenders').update({[field]:value}).eq('id',id);if(error){console.error('updateLender',error);toast('Update failed');}else{toast('Saved');}}catch(e){console.error(e);toast('Update failed');}}
+async function deleteLender(id){if(!confirm('Delete this lender?'))return;try{const{error}=await supabaseClient.from('lenders').delete().eq('id',id);if(error){console.error(error);toast('Delete failed');}else{lenders=lenders.filter(l=>l.id!==id);renderAll();toast('Lender deleted');}}catch(e){console.error(e);toast('Delete failed');}}
 
-function renderCustomers(){const deals=tables.deals||[];if(!deals.length){$('customersContent').innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><h3>No customers yet</h3><p>Deals will appear grouped by customer name.</p></div>';return;}const grouped={};deals.forEach(d=>{const name=d.customer_name||d.business_name||'Unknown';if(!grouped[name])grouped[name]=[];grouped[name].push(d);});const html=Object.entries(grouped).map(([name,ds])=>`<div class="deal-detail"><div class="header"><h3>${name}</h3><span class="badge badge-${ds[ds.length-1].status==='funded'?'approved':ds[ds.length-1].status==='lost'?'rejected':'active'}">${ds.length} deal${ds.length>1?'s':''}</span></div>${ds.map(d=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="openDealDetail('${d.id}')"><span>${fmtMoney(d.amount)} • ${d.equipment_type||'—'} • ${d.status}</span><span style="color:var(--text-muted);font-size:12px;">${fmtDate(d.created_at)}</span></div>`).join('')}</div>`).join('');$('customersContent').innerHTML=html;}
+// ========== RENDER: DEALERS ==========
+function renderDealers(){
+  if(!isConnected)return;const tbody=$('dealersTable').querySelector('tbody');
+  if(dealers.length===0){tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state"><div class="empty-title">No dealers yet</div><div class="empty-sub">Add your first dealer partner to start tracking referrals.</div></div></td></tr>`;return;}
+  tbody.innerHTML=dealers.map(d=>`<tr data-id="${d.id}"><td><input class="inline-input" style="min-width:140px;" value="${escapeHtml(d.business_name)}" onchange="updateDealer('${d.id}','business_name',this.value)"></td><td>${escapeHtml(d.contact_name||'')} <br><span style="font-size:12px;color:var(--text-dim);">${escapeHtml(d.contact_email||'')}</span></td><td><select class="inline-select" onchange="updateDealer('${d.id}','vertical',this.value)"><option value="">—</option><option value="trucking" ${d.vertical==='trucking'?'selected':''}>Trucking</option><option value="construction" ${d.vertical==='construction'?'selected':''}>Construction</option><option value="medical" ${d.vertical==='medical'?'selected':''}>Medical</option><option value="general" ${d.vertical==='general'?'selected':''}>General</option></select></td><td><input class="inline-input" style="width:40px;text-align:center;" value="${escapeHtml(d.state_code||'')}"
+ maxlength="2" onchange="updateDealer('${d.id}','state_code',this.value.toUpperCase())"></td><td><select class="inline-select" onchange="updateDealer('${d.id}','status',this.value)"><option value="prospect" ${d.status==='prospect'?'selected':''}>Prospect</option><option value="active" ${d.status==='active'?'selected':''}>Active</option><option value="inactive" ${d.status==='inactive'?'selected':''}>Inactive</option></select></td><td><span style="font-size:12px;color:var(--text-dim);">${d.last_contact_at?new Date(d.last_contact_at).toLocaleDateString():'—'}</span></td><td class="td-actions"><button class="btn-ghost btn-sm btn-danger" onclick="deleteDealer('${d.id}')">Delete</button></td></tr>`).join('');
+}
+async function updateDealer(id,field,value){try{const update={[field]:value};if(field==='status'&&value==='active')update.last_contact_at=new Date().toISOString();const{error}=await supabaseClient.from('dealers').update(update).eq('id',id);if(error){console.error('updateDealer',error);toast('Update failed');}else{toast('Saved');}}catch(e){console.error(e);toast('Update failed');}}
+async function deleteDealer(id){if(!confirm('Delete this dealer?'))return;try{const{error}=await supabaseClient.from('dealers').delete().eq('id',id);if(error){console.error(error);toast('Delete failed');}else{dealers=dealers.filter(d=>d.id!==id);renderAll();toast('Dealer deleted');}}catch(e){console.error(e);toast('Delete failed');}}
 
-function renderQueue(){const actions=(tables.actions||[]).filter(a=>a.status==='pending');if(!actions.length){$('queueContent').innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><h3>Queue is empty</h3><p>Agent actions awaiting approval will appear here.</p></div>';return;}const html=actions.map(a=>{const agent=(tables.agents||[]).find(x=>x.id===a.agent_id);return`<div class="queue-item"><div class="info"><div class="title">${a.action_type}: ${a.target_table} ${a.target_id}</div><div class="meta">Agent: ${agent?agent.name:a.agent_id} • ${fmtDate(a.created_at)}${a.reason?` • ${a.reason.slice(0,80)}`:'':''}</div></div><div class="actions"><button class="btn btn-sm btn-secondary" onclick="sendActionEmail('${a.id}')">📧 Send</button><button class="btn btn-sm btn-primary" onclick="approveAction('${a.id}')">Approve</button><button class="btn btn-sm btn-danger" onclick="rejectAction('${a.id}')">Reject</button></div></div>`;}).join('');$('queueContent').innerHTML=html;}
+// ========== RENDER: CUSTOMERS ==========
+function renderCustomers(){
+  if(!isConnected)return;const el=$('customersList');const groups={};
+  deals.forEach(d=>{const key=d.prospect_name+(d.business_name?' / '+d.business_name:'');if(!groups[key])groups[key]=[];groups[key].push(d);});
+  const keys=Object.keys(groups).sort();if(keys.length===0){el.innerHTML='<div class="empty-state"><div class="empty-title">No customers yet</div><div class="empty-sub">Add deals to see customers grouped by name.</div></div>';return;}
+  el.innerHTML=keys.map(key=>{const group=groups[key];const total=group.reduce((s,d)=>s+Number(d.amount_requested||0),0);const latest=group.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];return`<div class="panel" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-weight:600;font-size:15px;">${escapeHtml(key)}</div><div style="font-family:var(--font-mono);font-size:13px;color:var(--ledger);">${group.length} deals · ${fmtMoney(total)}</div></div><div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">${escapeHtml(latest.prospect_email||'')} · ${escapeHtml(latest.prospect_phone||'')} · ${escapeHtml(latest.state_code||'—')}</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${group.map(d=>`<div class="badge" style="color:${statusColor(d.status)};border-color:${statusColor(d.status)};">${DEAL_STATUS_LABELS[d.status]} · ${fmtMoney(d.amount_requested)}</div>`).join('')}</div></div>`;}).join('');
+}
 
-function renderSettings(){const agents=tables.agents||[];if(!agents.length){$('creditBudgets').innerHTML='<div class="empty-state" style="padding:24px;"><p>Connect to see agent credit budgets.</p></div>';$('agentStatus').innerHTML='<div class="empty-state" style="padding:24px;"><p>Connect to see agent status.</p></div>';return;}const budgets=agents.map(a=>{const used=(a.credits_used||0),total=(a.credit_budget||100),pct=Math.min(100,Math.round((used/total)*100));const cls=pct<60?'safe':pct<85?'warn':'danger';return`<div class="credit-budget"><div class="label"><span>${a.name}</span><span>${used}/${total} credits (${pct}%)</span></div><div class="bar"><div class="fill ${cls}" style="width:${pct}%"></div></div></div>`;}).join('');$('creditBudgets').innerHTML=budgets;const status=agents.map(a=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);"><span><strong>${a.name}</strong> <span style="color:var(--text-muted);font-size:12px;">${a.role}</span></span><span class="badge badge-${a.active?'active':'inactive'}">${a.active?'Online':'Offline'}</span></div>`).join('');$('agentStatus').innerHTML=status;}
+// ========== RENDER: QUEUE ==========
+function renderQueue(){
+  if(!isConnected)return;const el=$('queueList');let shown=agentActions.slice();if(queueFilter!=='all')shown=shown.filter(a=>a.status===queueFilter);shown=shown.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  const pendingCount=agentActions.filter(a=>a.status==='pending').length;const badge=$('queueBadge');if(pendingCount>0){badge.textContent=pendingCount;badge.style.display='inline-block';}else badge.style.display='none';
+  if(shown.length===0){el.innerHTML=`<div class="empty-state"><div class="empty-title">${queueFilter==='pending'?'Queue is clear':'No items'}</div><div class="empty-sub">${queueFilter==='pending'?'All agent actions have been reviewed.':'No actions in this status.'}</div></div>`;return;}
+  el.innerHTML=shown.map(a=>{const deal=deals.find(d=>d.id===a.deal_id);const agent=a.agents||{};const isPending=a.status==='pending';const meta=a.content_meta||{};return`<div class="queue-card" data-id="${a.id}"><div class="agent-name">${escapeHtml(agent.display_name||agent.name||'Agent')} · ${a.action_type} · ${a.model_used||'—'}</div><div class="title">${escapeHtml(a.content_title||'Untitled')}</div>${deal?`<div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">Deal: ${escapeHtml(deal.prospect_name)} · ${fmtMoney(deal.amount_requested)}</div>`:''}<div class="body">${escapeHtml(a.content_body)}</div>${meta.to?`<div style="font-size:12px;color:var(--text-dim);margin-top:6px;">To: ${escapeHtml(meta.to)} · Subject: ${escapeHtml(meta.subject||'—')} · Channel: ${escapeHtml(meta.channel||'email')}</div>`:''}<div style="font-size:12px;color:var(--text-dim);margin-top:8px;">${a.credits_used||0} credits used · ${new Date(a.created_at).toLocaleString()}</div><div class="actions">${isPending?`<button class="btn btn-success" onclick="approveAction('${a.id}')">✓ Approve</button><button class="btn-ghost btn-danger" onclick="declineAction('${a.id}')">✗ Decline</button>`:''}${a.action_type==='email_draft'&&a.status==='approved'?`<a class="btn" href="mailto:${escapeHtml(meta.to||'')}?subject=${encodeURIComponent(meta.subject||'Follow-up')}&body=${encodeURIComponent(a.content_body)}" target="_blank">✉ Send Email</a>`:''}${a.action_type==='email_draft'&&isPending?`<a class="btn-ghost" style="text-decoration:none;" href="mailto:${escapeHtml(meta.to||'')}?subject=${encodeURIComponent(meta.subject||'Follow-up')}&body=${encodeURIComponent(a.content_body)}" target="_blank">Preview (mailto)</a>`:''}</div></div>`;}).join('');
+}
+async function approveAction(id){try{const{error}=await supabaseClient.from('agent_actions').update({status:'approved',decided_at:new Date().toISOString(),decided_by:currentUser?.id}).eq('id',id);if(error){console.error(error);toast('Approve failed');}else{toast('Approved');}}catch(e){console.error(e);toast('Approve failed');}}
+async function declineAction(id){const note=prompt('Decline reason (optional):')||'';try{const{error}=await supabaseClient.from('agent_actions').update({status:'declined',decided_at:new Date().toISOString(),decided_by:currentUser?.id,decision_note:note}).eq('id',id);if(error){console.error(error);toast('Decline failed');}else{toast('Declined');}}catch(e){console.error(e);toast('Decline failed');}}
 
-function renderAll(){renderPipeline();renderLenders();renderDealers();renderCustomers();renderQueue();renderSettings();}
+// ========== RENDER: SETTINGS ==========
+function renderSettings(){
+  const el=$('agentBudgets');el.innerHTML=agents.map(a=>{const pct=Math.min((a.credits_used_month||0)/(a.credits_limit_month||1)*100,100);const cls=pct>90?'danger':pct>70?'warning':'';return`<div class="budget-row"><div class="budget-name">${escapeHtml(a.display_name||a.name)}</div><div class="budget-bar"><div class="budget-fill ${cls}" style="width:${pct}%"></div></div><div class="budget-text">${a.credits_used_month||0}/${a.credits_limit_month||0}</div></div>`;}).join('');
+  $('agentStatus').innerHTML=agents.map(a=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);"><div><div style="font-weight:600;font-size:14px;">${escapeHtml(a.display_name||a.name)}</div><div style="font-size:12px;color:var(--text-dim);">Reports to: ${a.reports_to||'—'} · $${a.est_cost_per_call}/call · ${a.is_active?'<span style="color:var(--success);">Active</span>':'<span style="color:var(--danger);">Inactive</span>'}</div></div><div style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim);">${a.last_run_at?new Date(a.last_run_at).toLocaleString():'Never run'}</div></div>`).join('');
+}
 
-async function submitNewDeal(){const name=$('ndName').value.trim(),business=$('ndBusiness').value.trim(),equipment=$('ndEquipment').value,amount=parseFloat($('ndAmount').value)||0,state=$('ndState').value,credit=$('ndCredit').value,notes=$('ndNotes').value.trim();if(!name){showToast('Prospect name is required','error');return;}const{error}=await sb.from('deals').insert({customer_name:name,business_name:business,equipment_type:equipment,amount:amount,state:state,credit_band:credit,notes:notes,status:'lead'});if(error){showToast('Error: '+error.message,'error');return;}closeModal('newDealModal');showToast('Deal created!','success');await loadDeals();renderAll();updateDashboard();}
+// ========== THEME ==========
+function toggleTheme(){const html=document.documentElement;const current=html.getAttribute('data-theme')||'light';const next=current==='light'?'dark':'light';html.setAttribute('data-theme',next);localStorage.setItem('3e-theme',next);}
+(function initTheme(){const saved=localStorage.getItem('3e-theme');if(saved)document.documentElement.setAttribute('data-theme',saved);})();
 
-async function submitNewLender(){const name=$('nlName').value.trim(),min=parseFloat($('nlMin').value)||0,max=parseFloat($('nlMax').value)||0,credit=$('nlCredit').value,commission=parseFloat($('nlCommission').value)||0,states=$('nlStates').value.split(',').map(s=>s.trim()).filter(Boolean),equipment=$('nlEquipment').value.split(',').map(s=>s.trim()).filter(Boolean);if(!name){showToast('Lender name is required','error');return;}const{error}=await sb.from('lenders').insert({name:name,min_amount:min,max_amount:max,credit_band_floor:credit,commission_rate:commission,states_served:states,equipment_types:equipment,active:true});if(error){showToast('Error: '+error.message,'error');return;}closeModal('newLenderModal');showToast('Lender created!','success');await loadLenders();renderAll();}
+// ========== MODALS ==========
+function openModal(id){$(id).classList.add('open');}function closeModal(id){$(id).classList.remove('open');}
+window.openDealModal=function(){editingDealId=null;clearDealForm();populateDealerDropdown();$('dealModalTitle').textContent='New Deal';openModal('dealModal');};
+window.openDealEdit=function(id){const d=deals.find(x=>x.id===id);if(!d)return;editingDealId=id;populateDealerDropdown();$('dealModalTitle').textContent='Edit Deal';$('dProspectName').value=d.prospect_name||'';$('dBusinessName').value=d.business_name||'';$('dEmail').value=d.prospect_email||'';$('dPhone').value=d.prospect_phone||'';$('dState').value=d.state_code||'';$('dAmount').value=d.amount_requested||'';$('dCreditBand').value=d.credit_score_band||'unknown';$('dTimeBiz').value=d.time_in_business_months||'';$('dRevenue').value=d.annual_revenue||'';$('dEquipType').value=d.equipment_type||'';$('dEquipDesc').value=d.equipment_description||'';$('dEquipNew').checked=!!d.equipment_new;$('dEquipLiquid').checked=!!d.equipment_liquid;$('dCreditAuth').checked=!!d.credit_auth;$('dDealerId').value=d.dealer_id||'';$('dSource').value=d.source||'dealer_referral';$('dNotes').value=(d.notes&&Array.isArray(d.notes)?d.notes.map(n=>n.note).join('\n'):'')||'';openModal('dealModal');};
+function clearDealForm(){$('dProspectName').value='';$('dBusinessName').value='';$('dEmail').value='';$('dPhone').value='';$('dState').value='';$('dAmount').value='';$('dCreditBand').value='unknown';$('dTimeBiz').value='';$('dRevenue').value='';$('dEquipType').value='';$('dEquipDesc').value='';$('dEquipNew').checked=false;$('dEquipLiquid').checked=false;$('dCreditAuth').checked=false;$('dDealerId').value='';$('dSource').value='dealer_referral';$('dNotes').value='';}
+function populateDealerDropdown(){const sel=$('dDealerId');sel.innerHTML='<option value="">— None —</option>'+dealers.map(d=>`<option value="${d.id}">${escapeHtml(d.business_name)}</option>`).join('');}
+$('btnCancelDeal').addEventListener('click',()=>closeModal('dealModal'));$('dealModalClose').addEventListener('click',()=>closeModal('dealModal'));$('dealModal').addEventListener('click',e=>{if(e.target.id==='dealModal')closeModal('dealModal');});
+$('btnSaveDeal').addEventListener('click',async()=>{
+  const rec={prospect_name:$('dProspectName').value.trim(),business_name:$('dBusinessName').value.trim()||null,prospect_email:$('dEmail').value.trim()||null,prospect_phone:$('dPhone').value.trim()||null,state_code:($('dState').value||'').toUpperCase()||null,amount_requested:Number($('dAmount').value)||null,credit_score_band:$('dCreditBand').value,time_in_business_months:Number($('dTimeBiz').value)||null,annual_revenue:Number($('dRevenue').value)||null,equipment_type:$('dEquipType').value||null,equipment_description:$('dEquipDesc').value.trim()||null,equipment_new:$('dEquipNew').checked,equipment_liquid:$('dEquipLiquid').checked,credit_auth:$('dCreditAuth').checked,dealer_id:$('dDealerId').value||null,source:$('dSource').value,status:'inquiry'};
+  if(!rec.prospect_name){alert('Prospect name is required.');return;}
+  const notesText=$('dNotes').value.trim();
+  if(editingDealId){const existing=deals.find(d=>d.id===editingDealId);const existingNotes=(existing&&existing.notes&&Array.isArray(existing.notes))?existing.notes:[];const oldNotesText=existingNotes.map(n=>n.note||'').join('\n');if(notesText&&notesText!==oldNotesText){rec.notes=[...existingNotes,{note:notesText,at:new Date().toISOString()}];}else{delete rec.notes;}}else{if(notesText)rec.notes=[{note:notesText,at:new Date().toISOString()}];}
+  try{if(editingDealId){const{error}=await supabaseClient.from('deals').update(rec).eq('id',editingDealId);if(error){console.error(error);toast('Save failed');return;}toast('Deal updated');}else{const{data,error}=await supabaseClient.from('deals').insert(rec).select();if(error){console.error(error);toast('Save failed');return;}toast('Deal created');}closeModal('dealModal');await refreshTable('deals');}catch(e){console.error(e);toast('Save failed');}
+});
 
-async function approveAction(id){const{error}=await sb.from('agent_actions').update({status:'approved',updated_at:new Date().toISOString()}).eq('id',id);if(error){showToast('Error: '+error.message,'error');return;}showToast('Action approved','success');await loadActions();renderQueue();updateDashboard();}
-async function rejectAction(id){const{error}=await sb.from('agent_actions').update({status:'rejected',updated_at:new Date().toISOString()}).eq('id',id);if(error){showToast('Error: '+error.message,'error');return;}showToast('Action rejected','info');await loadActions();renderQueue();updateDashboard();}
-function sendActionEmail(id){const a=(tables.actions||[]).find(x=>x.id===id);if(!a)return;const subject=encodeURIComponent('3E Action: '+a.action_type);const body=encodeURIComponent('Action ID: '+a.id+'\nType: '+a.action_type+'\nTarget: '+a.target_table+' '+a.target_id+'\n\nPlease review and approve.');window.open('mailto:?subject='+subject+'&body='+body,'_blank');showToast('Email draft opened','info');}
+window.openLenderModal=function(){editingLenderId=null;clearLenderForm();$('lenderModalTitle').textContent='New Lender';openModal('lenderModal');};
+function clearLenderForm(){$('lName').value='';$('lEmail').value='';$('lMin').value='';$('lMax').value='';$('lCreditFloor').value='unknown';$('lCommission').value='';$('lFundDays').value='';$('lEquipTypes').value='';$('lStates').value='';$('lStartup').checked=false;$('lNewOnly').checked=false;$('lActive').checked=true;$('lNotes').value='';}
+$('btnCancelLender').addEventListener('click',()=>closeModal('lenderModal'));$('lenderModalClose').addEventListener('click',()=>closeModal('lenderModal'));$('lenderModal').addEventListener('click',e=>{if(e.target.id==='lenderModal')closeModal('lenderModal');});
+$('btnSaveLender').addEventListener('click',async()=>{
+  const etRaw=$('lEquipTypes').value.trim();const stRaw=$('lStates').value.trim();
+  const rec={name:$('lName').value.trim(),contact_email:$('lEmail').value.trim()||null,amount_min:Number($('lMin').value)||0,amount_max:Number($('lMax').value)||999999999,credit_band_floor:$('lCreditFloor').value,states_served:stRaw?stRaw.split(',').map(s=>s.trim().toUpperCase()):[],startup_accepted:$('lStartup').checked,equipment_types:etRaw?etRaw.split(',').map(s=>s.trim().toLowerCase()):[],equipment_new_only:$('lNewOnly').checked,commission_rate:Number($('lCommission').value)||null,avg_funding_days:Number($('lFundDays').value)||null,notes:$('lNotes').value.trim()||null,is_active:$('lActive').checked};
+  if(!rec.name){alert('Lender name is required.');return;}
+  try{if(editingLenderId){const{error}=await supabaseClient.from('lenders').update(rec).eq('id',editingLenderId);if(error){console.error(error);toast('Save failed');return;}toast('Lender updated');}else{const{data,error}=await supabaseClient.from('lenders').insert(rec).select();if(error){console.error(error);toast('Save failed');return;}toast('Lender created');}closeModal('lenderModal');await refreshTable('lenders');}catch(e){console.error(e);toast('Save failed');}
+});
 
-async function openDealDetail(id){editingDeal=(tables.deals||[]).find(d=>d.id===id);if(!editingDeal)return;const d=editingDeal;const html=`<div class="form-row"><div class="form-group"><label>Customer</label><input type="text" id="edCustomer" value="${d.customer_name||''}"></div><div class="form-group"><label>Business</label><input type="text" id="edBusiness" value="${d.business_name||''}"></div></div><div class="form-row"><div class="form-group"><label>Amount</label><input type="number" id="edAmount" value="${d.amount||0}"></div><div class="form-group"><label>Status</label><select id="edStatus"><option value="lead" ${d.status==='lead'?'selected':''}>Lead</option><option value="qualified" ${d.status==='qualified'?'selected':''}>Qualified</option><option value="submitted" ${d.status==='submitted'?'selected':''}>Submitted</option><option value="approved" ${d.status==='approved'?'selected':''}>Approved</option><option value="funded" ${d.status==='funded'?'selected':''}>Funded</option><option value="lost" ${d.status==='lost'?'selected':''}>Lost</option></select></div></div><div class="form-row"><div class="form-group"><label>Equipment</label><input type="text" id="edEquipment" value="${d.equipment_type||''}"></div><div class="form-group"><label>State</label><input type="text" id="edState" value="${d.state||''}"></div></div><div class="form-group"><label>Notes</label><textarea id="edNotes">${d.notes||''}</textarea></div>`;$('dealDetailContent').innerHTML=html;openModal('dealDetailModal');}
-async function saveDealDetails(){if(!editingDeal)return;const updates={customer_name:$('edCustomer').value.trim(),business_name:$('edBusiness').value.trim(),amount:parseFloat($('edAmount').value)||0,status:$('edStatus').value,equipment_type:$('edEquipment').value.trim(),state:$('edState').value.trim(),notes:$('edNotes').value.trim(),updated_at:new Date().toISOString()};const{error}=await sb.from('deals').update(updates).eq('id',editingDeal.id);if(error){showToast('Error: '+error.message,'error');return;}showToast('Deal updated','success');closeModal('dealDetailModal');await loadDeals();renderAll();updateDashboard();}
+window.openDealerModal=function(){editingDealerId=null;clearDealerForm();$('dealerModalTitle').textContent='New Dealer';openModal('dealerModal');};
+function clearDealerForm(){$('dlBusinessName').value='';$('dlContactName').value='';$('dlContactEmail').value='';$('dlContactPhone').value='';$('dlVertical').value='';$('dlState').value='';$('dlStatus').value='prospect';$('dlReferralRate').value='';$('dlNotes').value='';}
+$('btnCancelDealer').addEventListener('click',()=>closeModal('dealerModal'));$('dealerModalClose').addEventListener('click',()=>closeModal('dealerModal'));$('dealerModal').addEventListener('click',e=>{if(e.target.id==='dealerModal')closeModal('dealerModal');});
+$('btnSaveDealer').addEventListener('click',async()=>{
+  const rec={business_name:$('dlBusinessName').value.trim(),contact_name:$('dlContactName').value.trim()||null,contact_email:$('dlContactEmail').value.trim()||null,contact_phone:$('dlContactPhone').value.trim()||null,vertical:$('dlVertical').value||null,state_code:($('dlState').value||'').toUpperCase()||null,status:$('dlStatus').value,referral_rate:Number($('dlReferralRate').value)||null,notes:$('dlNotes').value.trim()||null};
+  if(!rec.business_name){alert('Business name is required.');return;}
+  try{if(editingDealerId){const{error}=await supabaseClient.from('dealers').update(rec).eq('id',editingDealerId);if(error){console.error(error);toast('Save failed');return;}toast('Dealer updated');}else{const{data,error}=await supabaseClient.from('dealers').insert(rec).select();if(error){console.error(error);toast('Save failed');return;}toast('Dealer created');}closeModal('dealerModal');await refreshTable('dealers');}catch(e){console.error(e);toast('Save failed');}
+});
 
-async function editLender(id){const l=(tables.lenders||[]).find(x=>x.id===id);if(!l)return;editingLender=l;const states=(l.states_served||[]).join(', ');const equipment=(l.equipment_types||[]).join(', ');const html=`<div class="form-group"><label>Name</label><input type="text" id="elName" value="${l.name}"></div><div class="form-row"><div class="form-group"><label>Min Amount</label><input type="number" id="elMin" value="${l.min_amount||0}"></div><div class="form-group"><label>Max Amount</label><input type="number" id="elMax" value="${l.max_amount||0}"></div></div><div class="form-row"><div class="form-group"><label>Credit Floor</label><select id="elCredit"><option value="">Select...</option><option value="A (720+)" ${l.credit_band_floor==='A (720+)'?'selected':''}>A (720+)</option><option value="B (680-719)" ${l.credit_band_floor==='B (680-719)'?'selected':''}>B (680-719)</option><option value="C (640-679)" ${l.credit_band_floor==='C (640-679)'?'selected':''}>C (640-679)</option><option value="D (600-639)" ${l.credit_band_floor==='D (600-639)'?'selected':''}>D (600-639)</option><option value="E (<600)" ${l.credit_band_floor==='E (<600)'?'selected':''}>E (<600)</option></select></div><div class="form-group"><label>Commission Rate (%)</label><input type="number" id="elCommission" value="${l.commission_rate||0}" step="0.1"></div></div><div class="form-group"><label>States Served</label><input type="text" id="elStates" value="${states}"></div><div class="form-group"><label>Equipment Types</label><input type="text" id="elEquipment" value="${equipment}"></div><div class="form-group"><label><input type="checkbox" id="elActive" ${l.active?'checked':''}> Active</label></div><div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn btn-secondary" onclick="closeModal('dealDetailModal')">Cancel</button><button class="btn btn-primary" onclick="saveLenderEdit()">Save</button></div>`;$('dealDetailContent').innerHTML=html;openModal('dealDetailModal');}
-async function saveLenderEdit(){if(!editingLender)return;const updates={name:$('elName').value.trim(),min_amount:parseFloat($('elMin').value)||0,max_amount:parseFloat($('elMax').value)||0,credit_band_floor:$('elCredit').value,commission_rate:parseFloat($('elCommission').value)||0,states_served:$('elStates').value.split(',').map(s=>s.trim()).filter(Boolean),equipment_types:$('elEquipment').value.split(',').map(s=>s.trim()).filter(Boolean),active:$('elActive').checked,updated_at:new Date().toISOString()};const{error}=await sb.from('lenders').update(updates).eq('id',editingLender.id);if(error){showToast('Error: '+error.message,'error');return;}showToast('Lender updated','success');closeModal('dealDetailModal');await loadLenders();renderAll();}
-async function editDealer(id){const d=(tables.dealers||[]).find(x=>x.id===id);if(!d)return;editingLender=d;const html=`<div class="form-group"><label>Name</label><input type="text" id="edName" value="${d.name}"></div><div class="form-group"><label>Vertical</label><input type="text" id="edVertical" value="${d.vertical||''}"></div><div class="form-group"><label>Email</label><input type="email" id="edEmail" value="${d.contact_email||''}"></div><div class="form-group"><label>Phone</label><input type="text" id="edPhone" value="${d.contact_phone||''}"></div><div class="form-group"><label><input type="checkbox" id="edActive" ${d.active?'checked':''}> Active</label></div><div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn btn-secondary" onclick="closeModal('dealDetailModal')">Cancel</button><button class="btn btn-primary" onclick="saveDealerEdit()">Save</button></div>`;$('dealDetailContent').innerHTML=html;openModal('dealDetailModal');}
-async function saveDealerEdit(){if(!editingLender)return;const d=editingLender;const updates={name:$('edName').value.trim(),vertical:$('edVertical').value.trim(),contact_email:$('edEmail').value.trim(),contact_phone:$('edPhone').value.trim(),active:$('edActive').checked,updated_at:new Date().toISOString()};const{error}=await sb.from('dealers').update(updates).eq('id',d.id);if(error){showToast('Error: '+error.message,'error');return;}showToast('Dealer updated','success');closeModal('dealDetailModal');await loadDealers();renderAll();}
+// ========== FILTERS ==========
+document.querySelectorAll('#tab-pipeline .chip').forEach(c=>{c.addEventListener('click',()=>{document.querySelectorAll('#tab-pipeline .chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');pipelineFilter=c.dataset.status;renderPipeline();});});
+document.querySelectorAll('#tab-queue .chip').forEach(c=>{c.addEventListener('click',()=>{document.querySelectorAll('#tab-queue .chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');queueFilter=c.dataset.qfilter;renderQueue();});});
 
-$('themeToggle').addEventListener('click',()=>{const html=document.documentElement;const isDark=html.getAttribute('data-theme')==='dark';html.setAttribute('data-theme',isDark?'light':'dark');$('themeToggle').textContent=isDark?'🌙':'☀️';localStorage.setItem('3e-theme',isDark?'light':'dark');});
-$('darkModeToggle').addEventListener('change',e=>{const html=document.documentElement;html.setAttribute('data-theme',e.target.checked?'dark':'light');$('themeToggle').textContent=e.target.checked?'☀️':'🌙';localStorage.setItem('3e-theme',e.target.checked?'dark':'light');});
-const savedTheme=localStorage.getItem('3e-theme');if(savedTheme){document.documentElement.setAttribute('data-theme',savedTheme);$('darkModeToggle').checked=savedTheme==='dark';$('themeToggle').textContent=savedTheme==='dark'?'☀️':'🌙';}
+// ========== BUTTONS ==========
+$('btnNewDeal').addEventListener('click',openDealModal);$('btnNewDealQuick').addEventListener('click',openDealModal);$('fabNewDeal').addEventListener('click',openDealModal);$('btnNewLender').addEventListener('click',openLenderModal);$('btnNewDealer').addEventListener('click',openDealerModal);$('btnToggleTheme').addEventListener('click',toggleTheme);
 
-$('newDealBtn').addEventListener('click',()=>openModal('newDealModal'));
-$('newLenderBtn').addEventListener('click',()=>openModal('newLenderModal'));
-document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const tab=a.dataset.tab;document.querySelectorAll('#nav a').forEach(n=>n.classList.remove('active'));a.classList.add('active');document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));$(`tab-${tab}`).classList.add('active');currentTab=tab;if(tab==='pipeline')renderPipeline();if(tab==='lenders')renderLenders();if(tab==='dealers')renderDealers();if(tab==='customers')renderCustomers();if(tab==='queue')renderQueue();if(tab==='settings')renderSettings();}));
-document.querySelectorAll('#pipelineFilters button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#pipelineFilters button').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderPipeline();}));
-$('searchInput').addEventListener('input',e=>{const q=e.target.value.toLowerCase();const allCards=document.querySelectorAll('.pipeline-card, .queue-item, .deal-detail');allCards.forEach(c=>{c.style.display=c.textContent.toLowerCase().includes(q)?'':'none';});});
+// ========== AGENT TRIGGERS & SIGN OUT ==========
+async function triggerAgent(agentName){
+  toast('Running '+agentName+' agent...');
+  try{
+    const res=await fetch(SUPABASE_URL+'/functions/v1/agent-orchestrator',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY},
+      body:JSON.stringify({agent:agentName})
+    });
+    const data=await res.json().catch(()=>(null));
+    if(!res.ok){toast(agentName+' agent failed: '+(data?.error||res.statusText));return;}
+    toast(agentName+' agent complete. Queue refreshed.');
+    await refreshTable('agent_actions');await refreshTable('deals');
+  }catch(e){console.error(e);toast(agentName+' agent error: '+e.message);}
+}
+function doSignOut(){localStorage.removeItem('3e_session');localStorage.removeItem('3e_supabase_url');localStorage.removeItem('3e_supabase_key');location.reload();}
 
-window.addEventListener('keydown',e=>{if(e.key==='Escape'){['newDealModal','newLenderModal','dealDetailModal'].forEach(id=>closeModal(id));}});
+function renderAll(){renderDashboard();renderPipeline();renderLenders();renderDealers();renderCustomers();renderQueue();renderSettings();}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('dealModal');closeModal('lenderModal');closeModal('dealerModal');}if(e.key==='n'&&e.ctrlKey){e.preventDefault();openDealModal();}});
 </script>
 </body>
 </html>
