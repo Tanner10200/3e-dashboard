@@ -680,14 +680,14 @@ $('btnNewDeal').addEventListener('click',openDealModal);$('btnNewDealQuick').add
 async function triggerAgent(agentName){
   toast('Running '+agentName+' agent...');
   try{
-    const res=await fetch(SUPABASE_URL+'/functions/v1/agent-orchestrator',{
+    const res=await fetch(SUPABASE_URL+'/functions/v1/'+agentName+'-agent',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY},
-      body:JSON.stringify({agent:agentName})
+      body:JSON.stringify({})
     });
     const data=await res.json().catch(()=>(null));
     if(!res.ok){toast(agentName+' agent failed: '+(data?.error||res.statusText));return;}
-    toast(agentName+' agent complete. Queue refreshed.');
+    toast(agentName+' agent complete. '+ (data?.actions_created||0) + ' actions queued. Queue refreshed.');
     await refreshTable('agent_actions');await refreshTable('deals');
   }catch(e){console.error(e);toast(agentName+' agent error: '+e.message);}
 }
