@@ -366,7 +366,7 @@ td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}tr:hov
 
     <!-- PIPELINE -->
     <div class="tab-section" id="tab-pipeline">
-      <div class="page-header"><div><div class="eyebrow">Deals</div><h1>Pipeline</h1></div><button class="btn" id="btnNewDeal">+ New Deal</button></div>
+      <div class="page-header"><div><div class="eyebrow">Deals</div><h1>Pipeline</h1></div><div style="display:flex;gap:8px;"><button class="btn-ghost btn-sm" onclick="exportDealsToCSV()">↓ Export CSV</button><button class="btn" id="btnNewDeal">+ New Deal</button></div></div>
       <div class="filter-row">
         <button class="chip active" data-status="all">All</button>
         <button class="chip" data-status="inquiry">Inquiry</button>
@@ -383,7 +383,7 @@ td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}tr:hov
 
     <!-- LENDERS -->
     <div class="tab-section" id="tab-lenders">
-      <div class="page-header"><div><div class="eyebrow">Funding Sources</div><h1>Lenders</h1></div><button class="btn" id="btnNewLender">+ New Lender</button></div>
+      <div class="page-header"><div><div class="eyebrow">Funding Sources</div><h1>Lenders</h1></div><div style="display:flex;gap:8px;"><button class="btn-ghost btn-sm" onclick="exportLendersToCSV()">↓ Export CSV</button><button class="btn" id="btnNewLender">+ New Lender</button></div></div>
       <div class="panel" style="padding:0;overflow-x:auto;">
         <table id="lendersTable"><thead><tr><th>Name</th><th>Min–Max</th><th>Credit Floor</th><th>States</th><th>Equipment</th><th>Commission</th><th>Fund Days</th><th>Active</th><th style="width:90px;"></th></tr></thead><tbody></tbody></table>
       </div>
@@ -776,10 +776,13 @@ ${creditScoreBar(calcCreditScore(d).score)}
 ${(()=>{const docs=documents.filter(doc=>doc.deal_id===d.id);return docs.length?`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);"><div style="font-weight:600;font-size:13px;margin-bottom:8px;">Documents (${docs.length})</div><div style="display:flex;flex-direction:column;gap:6px;">${docs.map(doc=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--bg);border-radius:4px;"><a href="${SUPABASE_URL}/storage/v1/object/public/deal-documents/${encodeURIComponent(doc.storage_path)}" target="_blank" style="font-size:12px;color:var(--ledger);text-decoration:none;">📄 ${escapeHtml(doc.file_name)}</a><span style="font-size:11px;color:var(--text-dim);">${fmtFileSize(doc.file_size_bytes)}</span></div>`).join('')}</div></div>`:'';})()}
 ${renderDealDocChecklistInPipeline(d.id)}
 ${renderLenderMatchPreview(d.id)}
-<div style="display:flex;gap:8px;margin-top:12px;"><button class="btn-ghost btn-sm" onclick="openDealEdit('${d.id}')">Full Edit</button><button class="btn-ghost btn-sm btn-danger" onclick="deleteDeal('${d.id}')">Delete</button></div></div></div>`;}).join('');
+<div style="display:flex;gap:8px;margin-top:12px;"><button class="btn-ghost btn-sm" onclick="openDealEdit('${d.id}')">Full Edit</button>${getNextStage(d.status)?`<button class="btn btn-sm" onclick="advanceDealStage('${d.id}')">→ ${DEAL_STATUS_LABELS[getNextStage(d.status)]}</button>`:''}<button class="btn-ghost btn-sm btn-danger" onclick="deleteDeal('${d.id}')">Delete</button></div></div></div>`;}).join('');
 }
 function toggleDealExpand(id){editingDealId=editingDealId===id?null:id;renderPipeline();}
-async function updateDeal(id,field,value){try{const update={[field]:value};if(field==='status')update.status_changed_at=new Date().toISOString();const{error}=await supabaseClient.from('deals').update(update).eq('id',id);if(error){console.error('updateDeal',error);toast('Update failed');}else{toast('Saved');if(field==='status')autoTriggerOnStatus(value);}}catch(e){console.error(e);toast('Update failed');}}
+async function updateDeal(id,field,value){try{const update={[field]:value};if(field==='status'){update.status_changed_at=new Date().toISOString();if(value==='funded'||value==='commission_paid'){const d=deals.find(x=>x.id===id);if(d){const comm=calcCommission(d);if(comm){update.commission_rate=comm.rate;update.commission_amount=comm.amount;update.commission_paid_at=value==='commission_paid'?new Date().toISOString():null;}}}}const{error}=await supabaseClient.from('deals').update(update).eq('id',id);if(error){console.error('updateDeal',error);toast('Update failed');}else{toast('Saved');if(field==='status')autoTriggerOnStatus(value);}}catch(e){console.error(e);toast('Update failed');}}
+function calcCommission(deal){const amount=Number(deal.amount_requested||0);if(!amount||!lenders.length)return null;const ranked=lenders.filter(l=>l.is_active).map(l=>calcLenderMatch(deal,l)).sort((a,b)=>b.score-a.score);const best=ranked[0];if(!best)return null;const rate=Number(best.lender.commission_rate||0);const amount=Math.round(amount*(rate/100)*100)/100;return{rate,amount,lender:best.lender.name};}
+function getNextStage(status){const idx=DEAL_STATUS_ORDER.indexOf(status);if(idx>=0&&idx<DEAL_STATUS_ORDER.length-2)return DEAL_STATUS_ORDER[idx+1];return null;}
+async function advanceDealStage(id){const d=deals.find(x=>x.id===id);if(!d)return;const next=getNextStage(d.status);if(!next){toast('No next stage');return;}await updateDeal(id,'status',next);renderPipeline();}
 async function deleteDeal(id){if(!confirm('Delete this deal?'))return;try{const{error}=await supabaseClient.from('deals').update({deleted_at:new Date().toISOString()}).eq('id',id);if(error){console.error(error);toast('Delete failed');}else{deals=deals.filter(d=>d.id!==id);renderAll();toast('Deal deleted');}}catch(e){console.error(e);toast('Delete failed');}}
 async function saveCreditScore(id){const d=deals.find(x=>x.id===id);if(!d)return;const cs=calcCreditScore(d);try{const{error}=await supabaseClient.from('deals').update({credit_score:cs.score,credit_score_rationale:cs.reasons}).eq('id',id);if(error){toast('Save failed: '+error.message);return;}toast('Credit score saved: '+cs.score+'/100');}catch(e){toast('Error: '+e.message);}}
 
@@ -931,6 +934,26 @@ async function triggerAgent(agentName){
   }catch(e){console.error(e);toast(agentName+' agent error: '+e.message);}
 }
 function doSignOut(){localStorage.removeItem('3e_session');localStorage.removeItem('3e_supabase_url');localStorage.removeItem('3e_supabase_key');location.reload();}
+function escapeCsv(val){if(val==null)return'';const s=String(val).replace(/"/g,'""');if(s.includes(',')||s.includes('\n')||s.includes('"'))return`"${s}"`;return s;}
+function downloadCSV(filename,rows){
+  const header=rows[0].map(escapeCsv).join(',');
+  const body=rows.slice(1).map(r=>r.map(escapeCsv).join(',')).join('\n');
+  const csv=header+'\n'+body;
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+function exportDealsToCSV(){
+  const rows=[['ID','Prospect','Business','Email','Phone','State','Status','Amount Requested','Amount Approved','Credit Band','Time in Business (mo)','Annual Revenue','Equipment Type','Commission Rate','Commission Amount','Commission Paid At','Created At','Notes']];
+  const active=deals.filter(d=>!d.deleted_at);
+  active.forEach(d=>{rows.push([d.id,d.prospect_name||'',d.business_name||'',d.prospect_email||'',d.prospect_phone||'',d.state_code||'',d.status||'',d.amount_requested||'',d.amount_approved||'',d.credit_score_band||'',d.time_in_business_months||'',d.annual_revenue||'',d.equipment_type||'',d.commission_rate||'',d.commission_amount||'',d.commission_paid_at||'',d.created_at||'','']);});
+  downloadCSV('3e-deals-'+new Date().toISOString().slice(0,10)+'.csv',rows);toast('Exported '+active.length+' deals');
+}
+function exportLendersToCSV(){
+  const rows=[['ID','Name','Contact Email','Contact Phone','Min Amount','Max Amount','Credit Floor','States Served','Equipment Types','Commission Rate','Avg Funding Days','Startup Accepted','Active','Notes']];
+  lenders.forEach(l=>{rows.push([l.id,l.name||'',l.contact_email||'',l.contact_phone||'',l.amount_min||'',l.amount_max||'',l.credit_band_floor||'',(l.states_served||[]).join(';'),(l.equipment_types||[]).join(';'),l.commission_rate||'',l.avg_funding_days||'',l.startup_accepted?'Yes':'No',l.is_active?'Yes':'No',l.notes||'']);});
+  downloadCSV('3e-lenders-'+new Date().toISOString().slice(0,10)+'.csv',rows);toast('Exported '+lenders.length+' lenders');
+}
 
 function renderAll(){renderDashboard();renderBoard();renderPipeline();renderLenders();renderDealers();renderCustomers();renderQueue();renderSettings();renderEmailTemplates();renderAnalytics();}
 
