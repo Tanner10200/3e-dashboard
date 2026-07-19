@@ -6,7 +6,61 @@
 <title>3E Command Center</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+// ========== RENDER: KANBAN BOARD ==========
+function renderBoard(){
+  if(!isConnected||currentTab!=='board')return;
+  const el=$('kanbanBoard');const stages=DEAL_STATUS_ORDER.filter(s=>s!=='do_not_contact');
+  el.innerHTML=stages.map(s=>{const inStage=deals.filter(d=>d.status===s&&!d.deleted_at);const totalAmt=inStage.reduce((sum,d)=>sum+Number(d.amount_requested||0),0);
+    return`<div class="kanban-col" data-status="${s}" ondragover="allowKanbanDrop(event)" ondrop="kanbanDrop(event,'${s}')" ondragleave="kanbanDragLeave(event)">
+      <div class="kanban-col-header"><span>${DEAL_STATUS_LABELS[s]}</span><span class="count">${inStage.length} · ${fmtMoney(totalAmt)}</span></div>
+      <div class="kanban-col-body" id="kb-col-${s}">${inStage.map(d=>{const cs=calcCreditScore(d).score;return`<div class="kanban-card" draggable="true" data-id="${d.id}" ondragstart="kanbanDragStart(event,'${d.id}')" onclick="openDealEdit('${d.id}')">
+        <div class="kb-title">${escapeHtml(d.prospect_name)}</div>
+        <div class="kb-meta">${escapeHtml(d.business_name||'')}</div>
+        <div class="kb-meta">${fmtMoney(d.amount_requested)} · ${escapeHtml(d.state_code||'—')} · ${escapeHtml(d.equipment_type||'—')}</div>
+        <div class="kb-bottom">${creditScoreBadge(cs)}<div style="font-size:10px;color:var(--text-dim);">${daysSince(d.status_changed_at)<Infinity?daysSince(d.status_changed_at)+'d':''}</div></div>
+      </div>`;}).join('')}</div>
+    </div>`;}).join('');
+}
+let draggedDealId=null;
+function kanbanDragStart(e,id){draggedDealId=id;e.target.classList.add('dragging');}
+function allowKanbanDrop(e){e.preventDefault();e.currentTarget.classList.add('drag-over');}
+function kanbanDragLeave(e){e.currentTarget.classList.remove('drag-over');}
+async function kanbanDrop(e,newStatus){e.preventDefault();e.currentTarget.classList.remove('drag-over');if(!draggedDealId)return;const oldDeal=deals.find(d=>d.id===draggedDealId);if(!oldDeal||oldDeal.status===newStatus)return;try{const{error}=await supabaseClient.from('deals').update({status:newStatus,status_changed_at:new Date().toISOString()}).eq('id',draggedDealId);if(error){toast('Move failed');return;}toast(`${oldDeal.prospect_name} → ${DEAL_STATUS_LABELS[newStatus]}`);}catch(err){toast('Move error');}draggedDealId=null;}
+
+// ========== EMAIL TEMPLATES ==========
+const EMAIL_TEMPLATES=[
+  {key:'welcome',label:'Welcome Email',desc:'Send introduction to new prospect',subject:'Welcome to 3E Capital',body:'Hi {{name}},\n\nThank you for reaching out about equipment financing. We specialize in helping businesses like {{business}} secure fast, competitive funding.\n\nI will review your application and reach out within 24 hours with next steps.\n\nBest,\n3E Capital Team'},
+  {key:'docs_request',label:'Documents Request',desc:'Ask for bank statements, tax returns, etc.',subject:'Documents needed for {{business}}',body:'Hi {{name}},\n\nTo move forward with your {{amount}} financing request, we need the following documents:\n\n- Last 3 months of bank statements\n- Most recent tax return\n- Equipment quote or invoice\n\nPlease reply with these attached.\n\nBest,\n3E Capital Team'},
+  {key:'lender_submit',label:'Lender Submission',desc:'Confirm deal sent to lender',subject:'Your application is under review',body:'Hi {{name}},\n\nGreat news — your application for {{amount}} has been submitted to our lending partner for review.\n\nExpected turnaround: 24-48 hours\n\nI will update you as soon as we hear back.\n\nBest,\n3E Capital Team'},
+  {key:'terms_issued',label:'Terms Issued',desc:'Share approved terms with prospect',subject:'Financing terms approved — {{business}}',body:'Hi {{name}},\n\nYour financing has been approved! Here are the terms:\n\nAmount: {{amount}}\nTerm: [to be filled]\nRate: [to be filled]\n\nPlease review and let me know if you would like to proceed.\n\nBest,\n3E Capital Team'},
+  {key:'follow_up',label:'Follow-up',desc:'Gentle check-in after no response',subject:'Quick check-in — {{business}}',body:'Hi {{name}},\n\nJust checking in on your equipment financing request. Do you have any questions or need any help with the next steps?\n\nHappy to jump on a quick call if helpful.\n\nBest,\n3E Capital Team'},
+];
+function renderEmailTemplates(){
+  const el=$('emailTemplates');if(!el)return;el.innerHTML=EMAIL_TEMPLATES.map(t=>`<div class="email-panel"><div class="ep-header">📧 ${t.label}</div><div class="email-template"><div><div class="et-label">${t.subject}</div><div class="et-desc">${t.desc}</div></div><button class="btn btn-sm" onclick="openEmailComposer('${t.key}')">Compose</button></div></div>`).join('');
+}
+function openEmailComposer(key){const t=EMAIL_TEMPLATES.find(x=>x.key===key);if(!t)return;const activeDeal=deals.find(d=>d.status!=='funded'&&d.status!=='closed_lost'&&d.status!=='do_not_contact');if(!activeDeal){toast('No active deal to reference');return;}
+  const subject=t.subject.replace(/{{name}}/g,activeDeal.prospect_name||'').replace(/{{business}}/g,activeDeal.business_name||'').replace(/{{amount}}/g,fmtMoney(activeDeal.amount_requested));
+  const body=t.body.replace(/{{name}}/g,activeDeal.prospect_name||'').replace(/{{business}}/g,activeDeal.business_name||'').replace(/{{amount}}/g,fmtMoney(activeDeal.amount_requested));
+  window.open(`mailto:${activeDeal.prospect_email||''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,'_blank');
+  toast('Email composer opened');
+}
+
+// ========== CREDIT SCORE CHART ==========
+function renderCreditChart(){
+  const active=deals.filter(d=>d.status!=='funded'&&d.status!=='commission_paid'&&d.status!=='closed_lost'&&d.status!=='do_not_contact');
+  if(!active.length)return'';
+  const buckets={excellent:0,good:0,fair:0,poor:0,unknown:0};
+  active.forEach(d=>{const s=d.credit_score||calcCreditScore(d).score;let b='unknown';if(s>=80)b='excellent';else if(s>=60)b='good';else if(s>=40)b='fair';else if(s>0)b='poor';buckets[b]++;});
+  const maxCount=Math.max(...Object.values(buckets),1);
+  const labels={excellent:'80-100',good:'60-79',fair:'40-59',poor:'0-39',unknown:'N/A'};
+  const colors={excellent:'var(--success)',good:'var(--ledger)',fair:'var(--warning)',poor:'var(--danger)',unknown:'var(--text-muted)'};
+  return`<div class="panel"><div class="panel-title-lg">Credit Score Distribution (Active Deals)</div>
+    <div class="chart-bar">${Object.entries(buckets).map(([k,v])=>`<div class="chart-bar-item" style="height:${Math.round((v/maxCount)*100)}%;background:${colors[k]};"></div>`).join('')}</div>
+    <div class="chart-x-axis">${Object.entries(labels).map(([k,l])=>`<div class="chart-x-axis-item">${l}<br>${buckets[k]}</div>`).join('')}</div>
+  </div>`;
+}
+</script>
 <style>
 :root{--bg:#F7F6F3;--surface:#FFFFFF;--surface-hover:#EFEDE8;--border:#E2DFD8;--text:#1C1B19;--text-dim:#6B675F;--text-muted:#9B968D;--ledger:#1F4D3A;--ledger-hover:#163B2D;--ledger-light:color-mix(in srgb,var(--ledger) 12%,white);--trucking:#3B5D8A;--construction:#B5651D;--medical:#2A6E74;--danger:#B3432E;--danger-light:color-mix(in srgb,var(--danger) 10%,white);--warning:#C49A1A;--success:#2D7A4F;--font-body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;--font-mono:'IBM Plex Mono','Courier New',monospace;--radius:8px;--shadow-sm:0 1px 2px rgba(28,27,25,0.04);--shadow-md:0 4px 12px rgba(28,27,25,0.08);--shadow-lg:0 12px 32px rgba(28,27,25,0.12);}
 [data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--surface-hover:#282825;--border:#353532;--text:#E8E6E1;--text-dim:#9B968D;--text-muted:#6B675F;--ledger:#4FA87E;--ledger-hover:#6BC49A;--ledger-light:color-mix(in srgb,var(--ledger) 20%,#1E1E1C);--trucking:#6B9BD6;--construction:#D48B3E;--medical:#4BA8B0;--danger:#D66A55;--danger-light:color-mix(in srgb,var(--danger) 15%,#1E1E1C);--warning:#D4B840;--success:#4FA87E;}
@@ -103,6 +157,37 @@ td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}tr:hov
 .config-row button{padding:8px 16px;background:var(--ledger);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;}
 .connected{color:var(--success);font-size:12px;margin-top:4px;}
 .error{color:var(--danger);font-size:12px;margin-top:4px;}
+
+/* KANBAN */
+.kanban{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;}
+.kanban-col{min-width:220px;max-width:280px;flex:1;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;max-height:calc(100vh - 200px);}
+.kanban-col-header{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-dim);padding:0 4px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.kanban-col-header .count{font-family:var(--font-mono);font-size:10px;background:var(--surface);padding:2px 6px;border-radius:8px;}
+.kanban-col-body{flex:1;overflow-y:auto;padding-top:8px;}
+.kanban-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;cursor:grab;box-shadow:var(--shadow-sm);transition:box-shadow .15s,transform .1s;}
+.kanban-card:active{cursor:grabbing;transform:scale(1.02);box-shadow:var(--shadow-md);}
+.kanban-card.dragging{opacity:.5;}
+.kanban-card .kb-title{font-weight:600;font-size:13px;margin-bottom:4px;}
+.kanban-card .kb-meta{font-size:11px;color:var(--text-dim);margin-bottom:3px;}
+.kanban-card .kb-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:6px;}
+.kanban-card .kb-score{font-family:var(--font-mono);font-size:10px;}
+.kanban-col-body.drag-over{background:var(--ledger-light);}
+
+/* EMAIL PANEL */
+.email-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;}
+.email-panel .ep-header{font-weight:600;font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.email-template{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.email-template:last-child{border-bottom:none;}
+.email-template .et-label{color:var(--text);}
+.email-template .et-desc{color:var(--text-dim);font-size:11px;}
+
+/* CHART */
+.chart-bar{display:flex;align-items:flex-end;gap:4px;height:120px;padding:10px 0;}
+.chart-bar-item{flex:1;background:var(--ledger);border-radius:4px 4px 0 0;min-width:20px;transition:height .3s;position:relative;}
+.chart-bar-item:hover{background:var(--ledger-hover);}
+.chart-bar-label{font-size:9px;color:var(--text-dim);text-align:center;margin-top:4px;font-family:var(--font-mono);}
+.chart-x-axis{display:flex;gap:4px;}
+.chart-x-axis-item{flex:1;text-align:center;font-size:9px;color:var(--text-dim);font-family:var(--font-mono);min-width:20px;}
 </style>
 </head>
 <body>
@@ -112,6 +197,7 @@ td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}tr:hov
     <div class="brand">3E</div>
     <div class="brand-sub">COMMAND CENTER</div>
     <div class="nav-item active" data-tab="dashboard"><span class="nav-icon">◈</span>Dashboard</div>
+    <div class="nav-item" data-tab="board"><span class="nav-icon">◈</span>Board</div>
     <div class="nav-item" data-tab="pipeline"><span class="nav-icon">◈</span>Pipeline</div>
     <div class="nav-item" data-tab="lenders"><span class="nav-icon">◈</span>Lenders</div>
     <div class="nav-item" data-tab="dealers"><span class="nav-icon">◈</span>Dealers</div>
@@ -141,9 +227,16 @@ td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}tr:hov
     <div class="tab-section active" id="tab-dashboard" style="display:none;">
       <div class="page-header"><div><div class="eyebrow">Overview</div><h1>Dashboard</h1></div><button class="btn" id="btnNewDealQuick">+ New Deal</button></div>
       <div class="stat-grid" id="dashStats"></div>
+      <div id="dashChart"></div>
       <div class="panel"><div class="panel-title">Pipeline Funnel</div><div id="dashFunnel"></div></div>
       <div class="panel"><div class="panel-title">Needs Attention</div><div id="dashAttention"></div></div>
       <div class="panel"><div class="panel-title">Recent Activity</div><div id="dashActivity"></div></div>
+    </div>
+
+    <!-- BOARD -->
+    <div class="tab-section" id="tab-board">
+      <div class="page-header"><div><div class="eyebrow">Pipeline View</div><h1>Board</h1></div></div>
+      <div id="kanbanBoard" class="kanban"></div>
     </div>
 
     <!-- PIPELINE -->
@@ -213,6 +306,9 @@ td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}tr:hov
       <div class="panel"><div class="panel-title-lg">Appearance</div><div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;"><span style="font-size:13px;">Dark mode</span><button class="btn-ghost btn-sm" id="btnToggleTheme" style="margin:0;">Switch</button></div></div>
       <div class="panel"><div class="panel-title-lg">AI Agent Credit Budgets</div><div id="agentBudgets"></div></div>
       <div class="panel"><div class="panel-title-lg">Agent Status</div><div id="agentStatus"></div></div>
+      <div class="panel"><div class="panel-title-lg">Notifications & Email</div>
+        <div id="emailTemplates"></div>
+      </div>
     </div>
 
   </div>
@@ -454,8 +550,7 @@ function renderDashboard(){
   const pendingActions=agentActions.filter(a=>a.status==='pending').length;
   const fundedMonth=deals.filter(d=>{if(d.status!=='funded'&&d.status!=='commission_paid')return false;const fd=d.commission_paid_at||d.status_changed_at;if(!fd)return false;const f=new Date(fd);const n=new Date();return f.getMonth()===n.getMonth()&&f.getFullYear()===n.getFullYear();});
   const commissionMonth=fundedMonth.reduce((s,d)=>s+Number(d.commission_amount||0),0);
-  const avgScore=active.length?Math.round(active.reduce((s,d)=>s+(d.credit_score||calcCreditScore(d).score),0)/active.length):0;
-  $('dashStats').innerHTML=`<div class="stat-card"><div class="stat-num">${active.length}</div><div class="stat-label">Active Deals</div></div><div class="stat-card"><div class="stat-num is-money">${fmtMoney(pipelineValue)}</div><div class="stat-label">Pipeline Value</div></div><div class="stat-card"><div class="stat-num is-money">${fmtMoney(commissionMonth)}</div><div class="stat-label">Commission This Month</div></div><div class="stat-card"><div class="stat-num" style="color:${avgScore>=80?'var(--success)':avgScore>=60?'var(--warning)':'var(--danger)'};">${avgScore}</div><div class="stat-label">Avg Credit Score</div></div>`;
+  $('dashStats').innerHTML=`<div class="stat-card"><div class="stat-num">${active.length}</div><div class="stat-label">Active Deals</div></div><div class="stat-card"><div class="stat-num is-money">${fmtMoney(pipelineValue)}</div><div class="stat-label">Pipeline Value</div></div><div class="stat-card"><div class="stat-num is-money">${fmtMoney(commissionMonth)}</div><div class="stat-label">Commission This Month</div></div><div class="stat-card"><div class="stat-num" style="color:var(--danger);">${pendingActions}</div><div class="stat-label">Pending Approvals</div></div>`;
   const funnel=DEAL_STATUS_ORDER.filter(s=>s!=='do_not_contact').map(s=>{const inStage=deals.filter(d=>d.status===s);return{status:s,amount:inStage.reduce((sum,d)=>sum+Number(d.amount_requested||0),0),count:inStage.length};});
   const maxAmt=Math.max(...funnel.map(f=>f.amount),1);
   $('dashFunnel').innerHTML=funnel.map(f=>{const pct=Math.round((f.amount/maxAmt)*100);return`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><div style="width:120px;font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;flex-shrink:0;">${DEAL_STATUS_LABELS[f.status]}</div><div style="flex:1;background:var(--surface-hover);border-radius:4px;height:20px;overflow:hidden;"><div style="height:100%;border-radius:4px;background:${statusColor(f.status)};width:${pct}%;transition:width .3s;"></div></div><div style="width:130px;text-align:right;font-family:var(--font-mono);font-size:12px;flex-shrink:0;">${fmtMoney(f.amount)} <span style="color:var(--text-dim);">(${f.count})</span></div></div>`;}).join('');
@@ -469,6 +564,7 @@ function renderDashboard(){
   const actEl=$('dashActivity');
   if(recentEvents.length===0){actEl.innerHTML='<div class="empty-state">No recent activity. Actions and status changes will appear here.</div>';}
   else{actEl.innerHTML=recentEvents.slice(0,10).map(e=>{const d=new Date(e.ts);const label=d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' · '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});return`<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;"><span style="font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);display:block;margin-bottom:2px;">${label}</span>${e.text}</div>`;}).join('');}
+  const chartEl=$('dashChart');if(chartEl)chartEl.innerHTML=renderCreditChart();
 }
 
 // ========== RENDER: PIPELINE ==========
@@ -478,7 +574,7 @@ function renderPipeline(){
   shown=shown.sort((a,b)=>{const ai=DEAL_STATUS_ORDER.indexOf(a.status),bi=DEAL_STATUS_ORDER.indexOf(b.status);if(ai!==bi)return ai-bi;return new Date(b.created_at)-new Date(a.created_at);});
   if(shown.length===0){el.innerHTML=`<div class="empty-state"><div class="empty-title">No deals found</div><div class="empty-sub">${pipelineFilter==='all'?'Add your first deal to get started.':'No deals in this status. Try another filter.'}</div><button class="btn btn-sm" onclick="openDealModal()">+ Add Deal</button></div>`;return;}
   el.innerHTML=shown.map(d=>{const dealer=dealers.find(dl=>dl.id===d.dealer_id);const expanded=editingDealId===d.id;return`<div class="deal-card ${expanded?'expanded':''}" style="border-left-color:${statusColor(d.status)};" data-id="${d.id}"><div class="header" onclick="toggleDealExpand('${d.id}')"><div style="flex:1;"><div class="name">${escapeHtml(d.prospect_name)} ${d.business_name?'<span style="color:var(--text-dim);font-weight:400;">· '+escapeHtml(d.business_name)+'</span>':''}</div><div class="meta">${statusBadge(d.status)} · ${fmtMoney(d.amount_requested)} · ${escapeHtml(d.state_code||'—')} · ${escapeHtml(d.equipment_type||'—')} · ${creditScoreBadge(calcCreditScore(d).score)}</div>${dealer?'<div class="meta">Referral: '+escapeHtml(dealer.business_name)+'</div>':''}</div><div class="amount" style="flex-shrink:0;">${fmtMoney(d.amount_requested)}</div></div><div class="details"><div class="form-grid" style="margin-top:4px;"><div><label>Prospect Name</label><input class="inline-input" value="${escapeHtml(d.prospect_name)}" onchange="updateDeal('${d.id}','prospect_name',this.value)"></div><div><label>Business Name</label><input class="inline-input" value="${escapeHtml(d.business_name||'')}" onchange="updateDeal('${d.id}','business_name',this.value)"></div><div><label>Email</label><input class="inline-input" value="${escapeHtml(d.prospect_email||'')}" onchange="updateDeal('${d.id}','prospect_email',this.value)"></div><div><label>Phone</label><input class="inline-input" value="${escapeHtml(d.prospect_phone||'')}" onchange="updateDeal('${d.id}','prospect_phone',this.value)"></div><div><label>State</label><input class="inline-input" value="${escapeHtml(d.state_code||'')}" maxlength="2" onchange="updateDeal('${d.id}','state_code',this.value.toUpperCase())"></div><div><label>Amount</label><input class="inline-input" type="number" value="${d.amount_requested||''}" onchange="updateDeal('${d.id}','amount_requested',this.value)"></div><div><label>Status</label><select class="inline-select" onchange="updateDeal('${d.id}','status',this.value)">${DEAL_STATUS_ORDER.map(s=>`<option value="${s}" ${s===d.status?'selected':''}>${DEAL_STATUS_LABELS[s]}</option>`).join('')}</select></div><div><label>Credit Band</label><select class="inline-select" onchange="updateDeal('${d.id}','credit_score_band',this.value)">${CREDIT_BANDS.map(b=>`<option value="${b}" ${b===d.credit_score_band?'selected':''}>${b}</option>`).join('')}</select></div><div><label>Equipment Type</label><select class="inline-select" onchange="updateDeal('${d.id}','equipment_type',this.value)"><option value="">—</option>${EQUIPMENT_TYPES.map(t=>`<option value="${t}" ${t===d.equipment_type?'selected':''}>${t}</option>`).join('')}</select></div><div><label>Equipment Description</label><input class="inline-input" value="${escapeHtml(d.equipment_description||'')}" onchange="updateDeal('${d.id}','equipment_description',this.value)"></div></div><div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-weight:600;font-size:13px;">Credit Score</span><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12px;color:var(--text-dim);">${calcCreditScore(d).reasons}</span><button class="btn-ghost btn-sm" onclick="saveCreditScore('${d.id}')" style="padding:2px 8px;font-size:10px;">Recalc</button></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-weight:600;font-size:13px;">Credit Score</span><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12px;color:var(--text-dim);">${calcCreditScore(d).reasons}</span><button class="btn-ghost btn-sm" onclick="saveCreditScore('${d.id}')" style="padding:2px 8px;font-size:10px;">Recalc</button></div></span></div>
 ${creditScoreBar(calcCreditScore(d).score)}
 </div>
 ${(()=>{const docs=documents.filter(doc=>doc.deal_id===d.id);return docs.length?`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);"><div style="font-weight:600;font-size:13px;margin-bottom:8px;">Documents (${docs.length})</div><div style="display:flex;flex-direction:column;gap:6px;">${docs.map(doc=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--bg);border-radius:4px;"><a href="${SUPABASE_URL}/storage/v1/object/public/deal-documents/${encodeURIComponent(doc.storage_path)}" target="_blank" style="font-size:12px;color:var(--ledger);text-decoration:none;">📄 ${escapeHtml(doc.file_name)}</a><span style="font-size:11px;color:var(--text-dim);">${fmtFileSize(doc.file_size_bytes)}</span></div>`).join('')}</div></div>`:'';})()}
@@ -493,7 +589,7 @@ async function saveCreditScore(id){const d=deals.find(x=>x.id===id);if(!d)return
 function renderLenders(){
   if(!isConnected)return;const tbody=$('lendersTable').querySelector('tbody');
   if(lenders.length===0){tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="empty-title">No lenders yet</div><div class="empty-sub">Add your first lender to start matching deals.</div></div></td></tr>`;return;}
-  tbody.innerHTML=lenders.map(l=>`<tr data-id="${l.id}"><td><input class="inline-input" style="min-width:140px;" value="${escapeHtml(l.name)}" onchange="updateLender('${l.id}','name',this.value)"></td><td>${fmtMoney(l.amount_min)}–${fmtMoney(l.amount_max)}</td><td><select class="inline-select" onchange="updateLender('${l.id}','credit_band_floor',this.value)">${CREDIT_BANDS.map(b=>`<option value="${b}" ${b===l.credit_band_floor?'selected':''}>${b}</option>`).join('')}</select></td><td>${(l.states_served||[]).join(', ')||'ALL'}</td><td>${(l.equipment_types||[]).join(', ')||'ALL'}</td><td>${((l.commission_rate||0)*100).toFixed(2)}%</td><td>${l.avg_funding_days||'—'}</td><td><span class="badge" style="color:${l.is_active?'var(--success)':'var(--danger')}">${l.is_active?'Active':'Inactive'}</span></td><td class="td-actions"><button class="btn-ghost btn-sm btn-danger" onclick="deleteLender('${l.id}')">Delete</button></td></tr>`).join('');
+  tbody.innerHTML=lenders.map(l=>`<tr data-id="${l.id}"><td><input class="inline-input" style="min-width:140px;" value="${escapeHtml(l.name)}" onchange="updateLender('${l.id}','name',this.value)"></td><td>${fmtMoney(l.amount_min)}–${fmtMoney(l.amount_max)}</td><td><select class="inline-select" onchange="updateLender('${l.id}','credit_band_floor',this.value)">${CREDIT_BANDS.map(b=>`<option value="${b}" ${b===l.credit_band_floor?'selected':''}>${b}</option>`).join('')}</select></td><td>${(l.states_served||[]).join(', ')||'ALL'}</td><td>${(l.equipment_types||[]).join(', ')||'ALL'}</td><td>${((l.commission_rate||0)*100).toFixed(2)}%</td><td>${l.avg_funding_days||'—'}</td><td><span class="badge" style="color:${l.is_active?'var(--success)':'var(--danger)'};">${l.is_active?'Active':'Inactive'}</span></td><td class="td-actions"><button class="btn-ghost btn-sm btn-danger" onclick="deleteLender('${l.id}')">Delete</button></td></tr>`).join('');
 }
 async function updateLender(id,field,value){try{const{error}=await supabaseClient.from('lenders').update({[field]:value}).eq('id',id);if(error){console.error('updateLender',error);toast('Update failed');}else{toast('Saved');}}catch(e){console.error(e);toast('Update failed');}}
 async function deleteLender(id){if(!confirm('Delete this lender?'))return;try{const{error}=await supabaseClient.from('lenders').delete().eq('id',id);if(error){console.error(error);toast('Delete failed');}else{lenders=lenders.filter(l=>l.id!==id);renderAll();toast('Lender deleted');}}catch(e){console.error(e);toast('Delete failed');}}
@@ -597,9 +693,10 @@ async function triggerAgent(agentName){
 }
 function doSignOut(){localStorage.removeItem('3e_session');localStorage.removeItem('3e_supabase_url');localStorage.removeItem('3e_supabase_key');location.reload();}
 
-function renderAll(){renderDashboard();renderPipeline();renderLenders();renderDealers();renderCustomers();renderQueue();renderSettings();}
+function renderAll(){renderDashboard();renderBoard();renderPipeline();renderLenders();renderDealers();renderCustomers();renderQueue();renderSettings();renderEmailTemplates();}
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('dealModal');closeModal('lenderModal');closeModal('dealerModal');}if(e.key==='n'&&e.ctrlKey){e.preventDefault();openDealModal();}});
+
 </script>
 </body>
 </html>
