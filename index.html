@@ -326,6 +326,14 @@ td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}tr:hov
   </div>
 
   <div class="main">
+    <div id="globalSearchBar" style="position:sticky;top:0;z-index:50;background:var(--bg);padding:8px 0;margin-bottom:8px;display:none;">
+      <div style="display:flex;align-items:center;gap:8px;max-width:500px;">
+        <input type="text" id="globalSearchInput" placeholder="Search deals, lenders, dealers..." style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px;"
+          oninput="doGlobalSearch(this.value)" onkeydown="if(event.key==='Escape'){this.value='';doGlobalSearch('');}">
+        <button class="btn-ghost btn-sm" onclick="$('globalSearchInput').value='';doGlobalSearch('');">✕</button>
+      </div>
+      <div id="globalSearchResults" style="position:absolute;top:44px;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:var(--shadow-lg);max-height:400px;overflow-y:auto;padding:8px 0;display:none;"></div>
+    </div>
 
     <!-- PASSWORD LOGIN -->
     <div id="loginPanel" class="config-banner" style="text-align:center;max-width:400px;margin:60px auto;">
@@ -493,6 +501,8 @@ td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}tr:hov
       <label>Source</label><select id="dSource"><option value="dealer_referral">Dealer Referral</option><option value="inbound_web">Inbound Web</option><option value="outbound">Outbound</option></select>
       <label>Notes</label><textarea id="dNotes" placeholder="Any additional context..."></textarea>
       <div id="dealDocsSection" style="margin-top:8px;"></div>
+      <div id="dealDocChecklistSection" style="margin-top:8px;"></div>
+      <div id="dealLenderMatchSection" style="margin-top:8px;"></div>
       <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
         <div style="font-weight:600;font-size:13px;margin-bottom:8px;">Upload Document</div>
         <div class="form-grid">
@@ -606,6 +616,53 @@ function creditScoreBar(score){
   const col=score>=80?'var(--success)':score>=60?'var(--warning)':'var(--danger)';
   return`<div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;"><div style="height:100%;border-radius:4px;background:${col};width:${score}%;transition:width .3s;"></div></div><div style="font-family:var(--font-mono);font-size:11px;color:${col};font-weight:600;">${score}/100</div></div>`;
 }
+function calcLenderMatch(deal,lender){
+  const CREDIT_ORDER=['excellent','good','fair','poor','unknown'];
+  const amount=Number(deal.amount_requested||0);
+  const state=(deal.state_code||'').trim();
+  const credit=deal.credit_score_band||'unknown';
+  const equip=(deal.equipment_type||'').toLowerCase();
+  const startup=(deal.time_in_business_months||0)<24;
+  let score=0;const reasons=[];
+  if(amount>=Number(lender.amount_min||0)&&amount<=Number(lender.amount_max||999999999)){score+=30;reasons.push('✓ Amount in range');}
+  else{reasons.push('✗ Amount outside range');}
+  const states=(lender.states_served||[]).map(s=>s.trim());
+  if(states.length===0||states.includes(state)){score+=25;reasons.push('✓ State served');}
+  else{reasons.push('✗ State not served');}
+  const creditIdx=CREDIT_ORDER.indexOf(credit);
+  const lenderCreditIdx=CREDIT_ORDER.indexOf(lender.credit_band_floor||'unknown');
+  if(creditIdx>=lenderCreditIdx){score+=25;reasons.push('✓ Credit band meets floor');}
+  else{reasons.push('✗ Credit below floor');}
+  const equipTypes=(lender.equipment_types||[]).map(e=>e.toLowerCase());
+  if(equipTypes.length===0||equipTypes.includes(equip)){score+=10;reasons.push('✓ Equipment type accepted');}
+  else{reasons.push('✗ Equipment type not accepted');}
+  if(startup&&lender.startup_accepted){score+=10;reasons.push('✓ Startup accepted');}
+  if(startup&&!lender.startup_accepted){score-=10;reasons.push('✗ Startup not accepted');}
+  return{score,lender,reasons};
+}
+function renderLenderMatchPreview(dealId){
+  const d=deals.find(x=>x.id===dealId);if(!d||lenders.length===0)return'';
+  const ranked=lenders.filter(l=>l.is_active).map(l=>calcLenderMatch(d,l)).sort((a,b)=>b.score-a.score).slice(0,5);
+  if(ranked.length===0)return'';
+  return`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+    <div style="font-weight:600;font-size:13px;margin-bottom:8px;">Lender Match Preview</div>
+    ${ranked.map((r,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--bg);border-radius:4px;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">#${i+1}</span>
+        <span style="font-weight:600;font-size:13px;">${escapeHtml(r.lender.name)}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="display:flex;align-items:center;gap:4px;">
+          <div style="width:60px;height:6px;background:var(--surface-hover);border-radius:3px;overflow:hidden;">
+            <div style="height:100%;background:${r.score>=70?'var(--success)':r.score>=40?'var(--warning)':'var(--danger)';border-radius:3px;width:${r.score}%;"></div>
+          </div>
+          <span style="font-family:var(--font-mono);font-size:10px;">${r.score}/100</span>
+        </div>
+        <span style="font-size:10px;color:var(--text-dim);" title="${r.reasons.join(' | ')}">${r.score>=70?'✓ Good fit':r.score>=40?'~ Marginal':'✗ Poor fit'}</span>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
 function fmtFileSize(bytes){if(!bytes)return'';if(bytes<1024)return bytes+' B';if(bytes<1048576)return Math.round(bytes/1024)+' KB';return Math.round(bytes/1048576)+' MB';}
 
 // ========== LOGIN & CONNECT ==========
@@ -717,6 +774,8 @@ function renderPipeline(){
 ${creditScoreBar(calcCreditScore(d).score)}
 </div>
 ${(()=>{const docs=documents.filter(doc=>doc.deal_id===d.id);return docs.length?`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);"><div style="font-weight:600;font-size:13px;margin-bottom:8px;">Documents (${docs.length})</div><div style="display:flex;flex-direction:column;gap:6px;">${docs.map(doc=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--bg);border-radius:4px;"><a href="${SUPABASE_URL}/storage/v1/object/public/deal-documents/${encodeURIComponent(doc.storage_path)}" target="_blank" style="font-size:12px;color:var(--ledger);text-decoration:none;">📄 ${escapeHtml(doc.file_name)}</a><span style="font-size:11px;color:var(--text-dim);">${fmtFileSize(doc.file_size_bytes)}</span></div>`).join('')}</div></div>`:'';})()}
+${renderDealDocChecklistInPipeline(d.id)}
+${renderLenderMatchPreview(d.id)}
 <div style="display:flex;gap:8px;margin-top:12px;"><button class="btn-ghost btn-sm" onclick="openDealEdit('${d.id}')">Full Edit</button><button class="btn-ghost btn-sm btn-danger" onclick="deleteDeal('${d.id}')">Delete</button></div></div></div>`;}).join('');
 }
 function toggleDealExpand(id){editingDealId=editingDealId===id?null:id;renderPipeline();}
@@ -750,13 +809,37 @@ function renderCustomers(){
   el.innerHTML=keys.map(key=>{const group=groups[key];const total=group.reduce((s,d)=>s+Number(d.amount_requested||0),0);const latest=group.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];return`<div class="panel" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-weight:600;font-size:15px;">${escapeHtml(key)}</div><div style="font-family:var(--font-mono);font-size:13px;color:var(--ledger);">${group.length} deals · ${fmtMoney(total)}</div></div><div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">${escapeHtml(latest.prospect_email||'')} · ${escapeHtml(latest.prospect_phone||'')} · ${escapeHtml(latest.state_code||'—')}</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${group.map(d=>`<div class="badge" style="color:${statusColor(d.status)};border-color:${statusColor(d.status)};">${DEAL_STATUS_LABELS[d.status]} · ${fmtMoney(d.amount_requested)}</div>`).join('')}</div></div>`;}).join('');
 }
 
+let selectedActions=new Set();
 // ========== RENDER: QUEUE ==========
 function renderQueue(){
   if(!isConnected)return;const el=$('queueList');let shown=agentActions.slice();if(queueFilter!=='all')shown=shown.filter(a=>a.status===queueFilter);shown=shown.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   const pendingCount=agentActions.filter(a=>a.status==='pending').length;const badge=$('queueBadge');if(pendingCount>0){badge.textContent=pendingCount;badge.style.display='inline-block';}else badge.style.display='none';
   if(shown.length===0){el.innerHTML=`<div class="empty-state"><div class="empty-title">${queueFilter==='pending'?'Queue is clear':'No items'}</div><div class="empty-sub">${queueFilter==='pending'?'All agent actions have been reviewed.':'No actions in this status.'}</div></div>`;return;}
-  el.innerHTML=shown.map(a=>{const deal=deals.find(d=>d.id===a.deal_id);const agent=a.agents||{};const isPending=a.status==='pending';const meta=a.content_meta||{};return`<div class="queue-card" data-id="${a.id}"><div class="agent-name">${escapeHtml(agent.display_name||agent.name||'Agent')} · ${a.action_type} · ${a.model_used||'—'}</div><div class="title">${escapeHtml(a.content_title||'Untitled')}</div>${deal?`<div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">Deal: ${escapeHtml(deal.prospect_name)} · ${fmtMoney(deal.amount_requested)}</div>`:''}<div class="body">${escapeHtml(a.content_body)}</div>${meta.to?`<div style="font-size:12px;color:var(--text-dim);margin-top:6px;">To: ${escapeHtml(meta.to)} · Subject: ${escapeHtml(meta.subject||'—')} · Channel: ${escapeHtml(meta.channel||'email')}</div>`:''}<div style="font-size:12px;color:var(--text-dim);margin-top:8px;">${a.credits_used||0} credits used · ${new Date(a.created_at).toLocaleString()}</div><div class="actions">${isPending?`<button class="btn btn-success" onclick="approveAction('${a.id}')">✓ Approve</button><button class="btn-ghost btn-danger" onclick="declineAction('${a.id}')">✗ Decline</button>`:''}${a.action_type==='email_draft'&&a.status==='approved'?`<a class="btn" href="mailto:${escapeHtml(meta.to||'')}?subject=${encodeURIComponent(meta.subject||'Follow-up')}&body=${encodeURIComponent(a.content_body)}" target="_blank">✉ Send Email</a>`:''}${a.action_type==='email_draft'&&isPending?`<a class="btn-ghost" style="text-decoration:none;" href="mailto:${escapeHtml(meta.to||'')}?subject=${encodeURIComponent(meta.subject||'Follow-up')}&body=${encodeURIComponent(a.content_body)}" target="_blank">Preview (mailto)</a>`:''}</div></div>`;}).join('');
+  const hasPending=shown.some(a=>a.status==='pending');
+  const bulkBar=hasPending?`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:var(--ledger-light);border-radius:6px;">
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox" id="queueSelectAll" onchange="toggleQueueSelectAll(this.checked)"> Select all pending</label>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <button class="btn btn-success btn-sm" onclick="bulkApprove()">✓ Approve Selected</button>
+      <button class="btn-ghost btn-sm btn-danger" onclick="bulkDecline()">✗ Decline Selected</button>
+    </div>
+  </div>`:'';
+  el.innerHTML=bulkBar+shown.map(a=>{const deal=deals.find(d=>d.id===a.deal_id);const agent=a.agents||{};const isPending=a.status==='pending';const meta=a.content_meta||{};const checked=selectedActions.has(a.id)?'checked':'';return`<div class="queue-card" data-id="${a.id}">
+    ${isPending?`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <input type="checkbox" ${checked} onchange="toggleQueueItem('${a.id}',this.checked)">
+    </div>`:''}
+    <div class="agent-name">${escapeHtml(agent.display_name||agent.name||'Agent')} · ${a.action_type} · ${a.model_used||'—'}</div>
+    <div class="title">${escapeHtml(a.content_title||'Untitled')}</div>
+    ${deal?`<div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">Deal: ${escapeHtml(deal.prospect_name)} · ${fmtMoney(deal.amount_requested)}</div>`:''}
+    <div class="body">${escapeHtml(a.content_body)}</div>
+    ${meta.to?`<div style="font-size:12px;color:var(--text-dim);margin-top:6px;">To: ${escapeHtml(meta.to)} · Subject: ${escapeHtml(meta.subject||'—')} · Channel: ${escapeHtml(meta.channel||'email')}</div>`:''}
+    <div style="font-size:12px;color:var(--text-dim);margin-top:8px;">${a.credits_used||0} credits used · ${new Date(a.created_at).toLocaleString()}</div>
+    <div class="actions">${isPending?`<button class="btn btn-success" onclick="approveAction('${a.id}')">✓ Approve</button><button class="btn-ghost btn-danger" onclick="declineAction('${a.id}')">✗ Decline</button>`:''}${a.action_type==='email_draft'&&a.status==='approved'?`<a class="btn" href="mailto:${escapeHtml(meta.to||'')}?subject=${encodeURIComponent(meta.subject||'Follow-up')}&body=${encodeURIComponent(a.content_body)}" target="_blank">✉ Send Email</a>`:''}${a.action_type==='email_draft'&&isPending?`<a class="btn-ghost" style="text-decoration:none;" href="mailto:${escapeHtml(meta.to||'')}?subject=${encodeURIComponent(meta.subject||'Follow-up')}&body=${encodeURIComponent(a.content_body)}" target="_blank">Preview (mailto)</a>`:''}</div>
+  </div>`;}).join('');
 }
+function toggleQueueItem(id,checked){if(checked)selectedActions.add(id);else selectedActions.delete(id);renderQueue();}
+function toggleQueueSelectAll(checked){const pending=agentActions.filter(a=>a.status==='pending');if(checked)pending.forEach(a=>selectedActions.add(a.id));else pending.forEach(a=>selectedActions.delete(a.id));renderQueue();}
+async function bulkApprove(){if(selectedActions.size===0){toast('No items selected');return;}const ids=Array.from(selectedActions);try{const{error}=await supabaseClient.from('agent_actions').update({status:'approved',decided_at:new Date().toISOString()}).in('id',ids);if(error){toast('Bulk approve failed: '+error.message);return;}toast('Approved '+ids.length+' items');selectedActions.clear();await refreshTable('agent_actions');}catch(e){toast('Error: '+e.message);}}
+async function bulkDecline(){if(selectedActions.size===0){toast('No items selected');return;}const note=prompt('Decline reason (optional):')||'';const ids=Array.from(selectedActions);try{const{error}=await supabaseClient.from('agent_actions').update({status:'declined',decided_at:new Date().toISOString(),decision_note:note}).in('id',ids);if(error){toast('Bulk decline failed: '+error.message);return;}toast('Declined '+ids.length+' items');selectedActions.clear();await refreshTable('agent_actions');}catch(e){toast('Error: '+e.message);}}
 async function approveAction(id){try{const{error}=await supabaseClient.from('agent_actions').update({status:'approved',decided_at:new Date().toISOString(),decided_by:currentUser?.id}).eq('id',id);if(error){console.error(error);toast('Approve failed');}else{toast('Approved');}}catch(e){console.error(e);toast('Approve failed');}}
 async function declineAction(id){const note=prompt('Decline reason (optional):')||'';try{const{error}=await supabaseClient.from('agent_actions').update({status:'declined',decided_at:new Date().toISOString(),decided_by:currentUser?.id,decision_note:note}).eq('id',id);if(error){console.error(error);toast('Decline failed');}else{toast('Declined');}}catch(e){console.error(e);toast('Decline failed');}}
 
@@ -773,8 +856,25 @@ function toggleTheme(){const html=document.documentElement;const current=html.ge
 // ========== MODALS ==========
 function openModal(id){$(id).classList.add('open');}function closeModal(id){$(id).classList.remove('open');}
 window.openDealModal=function(){editingDealId=null;clearDealForm();populateDealerDropdown();$('dealModalTitle').textContent='New Deal';openModal('dealModal');};
-window.openDealEdit=function(id){const d=deals.find(x=>x.id===id);if(!d)return;editingDealId=id;populateDealerDropdown();renderDealDocsInModal(id);$('dealModalTitle').textContent='Edit Deal';$('dProspectName').value=d.prospect_name||'';$('dBusinessName').value=d.business_name||'';$('dEmail').value=d.prospect_email||'';$('dPhone').value=d.prospect_phone||'';$('dState').value=d.state_code||'';$('dAmount').value=d.amount_requested||'';$('dCreditBand').value=d.credit_score_band||'unknown';$('dTimeBiz').value=d.time_in_business_months||'';$('dRevenue').value=d.annual_revenue||'';$('dEquipType').value=d.equipment_type||'';$('dEquipDesc').value=d.equipment_description||'';$('dEquipNew').checked=!!d.equipment_new;$('dEquipLiquid').checked=!!d.equipment_liquid;$('dCreditAuth').checked=!!d.credit_auth;$('dDealerId').value=d.dealer_id||'';$('dSource').value=d.source||'dealer_referral';$('dNotes').value=(d.notes&&Array.isArray(d.notes)?d.notes.map(n=>n.note).join('\n'):'')||'';openModal('dealModal');};
+window.openDealEdit=function(id){const d=deals.find(x=>x.id===id);if(!d)return;editingDealId=id;populateDealerDropdown();renderDealDocsInModal(id);renderDealDocChecklistInModal(id);renderDealLenderMatchInModal(id);$('dealModalTitle').textContent='Edit Deal';$('dProspectName').value=d.prospect_name||'';$('dBusinessName').value=d.business_name||'';$('dEmail').value=d.prospect_email||'';$('dPhone').value=d.prospect_phone||'';$('dState').value=d.state_code||'';$('dAmount').value=d.amount_requested||'';$('dCreditBand').value=d.credit_score_band||'unknown';$('dTimeBiz').value=d.time_in_business_months||'';$('dRevenue').value=d.annual_revenue||'';$('dEquipType').value=d.equipment_type||'';$('dEquipDesc').value=d.equipment_description||'';$('dEquipNew').checked=!!d.equipment_new;$('dEquipLiquid').checked=!!d.equipment_liquid;$('dCreditAuth').checked=!!d.credit_auth;$('dDealerId').value=d.dealer_id||'';$('dSource').value=d.source||'dealer_referral';$('dNotes').value=(d.notes&&Array.isArray(d.notes)?d.notes.map(n=>n.note).join('\n'):'')||'';openModal('dealModal');};
+function renderDealLenderMatchInModal(dealId){const el=$('dealLenderMatchSection');if(!el)return;el.innerHTML=renderLenderMatchPreview(dealId);}
 function renderDealDocsInModal(dealId){const el=$('dealDocsSection');const docs=documents.filter(doc=>doc.deal_id===dealId);if(!docs.length){el.innerHTML='';return;}el.innerHTML=`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);"><div style="font-weight:600;font-size:13px;margin-bottom:8px;">Attached Documents</div><div style="display:flex;flex-direction:column;gap:6px;">${docs.map(doc=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--bg);border-radius:4px;"><a href="${SUPABASE_URL}/storage/v1/object/public/deal-documents/${encodeURIComponent(doc.storage_path)}" target="_blank" style="font-size:12px;color:var(--ledger);text-decoration:none;">📄 ${escapeHtml(doc.file_name)}</a><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:11px;color:var(--text-dim);">${fmtFileSize(doc.file_size_bytes)}</span><button class="btn-ghost btn-sm btn-danger" onclick="deleteDocument('${doc.id}','${doc.storage_path}')" style="padding:2px 8px;font-size:10px;">✕</button></div></div>`).join('')}</div></div>`;}
+function getDocChecklist(status){const map={inquiry:[],outreach_sent:[],docs_requested:['Bank statements (3 months)','Tax returns (2 years)','Equipment quote or invoice'],docs_collected:['Bank statements (3 months)','Tax returns (2 years)','Equipment quote or invoice'],submitted:['Completed application','Credit authorization','Business verification'],lender_review:['Lender-specific addendum','Additional financials (if requested)'],terms_issued:['Insurance binder (lender as loss payee)','UCC filing (if applicable)'],terms_accepted:['ACH authorization form','Signed equipment invoice','Final funding memo'],funded:['Funding confirmation','Commission calculation'],commission_paid:['Commission receipt'],closed_lost:[]};return map[status]||[];}
+function renderDealDocChecklistInModal(dealId){const el=$('dealDocChecklistSection');if(!el)return;const d=deals.find(x=>x.id===dealId);if(!d)return;const required=getDocChecklist(d.status);if(!required.length){el.innerHTML='';return;}const uploaded=documents.filter(doc=>doc.deal_id===dealId).map(doc=>doc.file_name.toLowerCase());const hasDoc=(label)=>uploaded.some(u=>u.includes(label.toLowerCase().split(' ')[0])||u.includes(label.toLowerCase().split(' ')[1]));el.innerHTML=`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+  <div style="font-weight:600;font-size:13px;margin-bottom:8px;">Document Checklist for ${DEAL_STATUS_LABELS[d.status]}</div>
+  <div style="display:flex;flex-direction:column;gap:6px;">${required.map(item=>{const done=hasDoc(item);return`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:${done?'var(--ledger-light)':'var(--bg)'};border-radius:4px;font-size:13px;">
+    <span style="font-size:14px;">${done?'✅':'⬜'}</span>
+    <span style="text-decoration:${done?'line-through':'none'};color:${done?'var(--text-dim)':'var(--text)'};">${escapeHtml(item)}</span>
+  </div>`;}).join('')}</div>
+</div>`;}
+function renderDealDocChecklistInPipeline(dealId){const d=deals.find(x=>x.id===dealId);if(!d)return'';const required=getDocChecklist(d.status);if(!required.length)return'';const uploaded=documents.filter(doc=>doc.deal_id===dealId).map(doc=>doc.file_name.toLowerCase());const hasDoc=(label)=>uploaded.some(u=>u.includes(label.toLowerCase().split(' ')[0])||u.includes(label.toLowerCase().split(' ')[1]));const doneCount=required.filter(hasDoc).length;return`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+  <div style="font-weight:600;font-size:13px;margin-bottom:8px;">Document Checklist (${doneCount}/${required.length})</div>
+  <div style="display:flex;flex-direction:column;gap:6px;">${required.map(item=>{const done=hasDoc(item);return`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;">
+    <span>${done?'✅':'⬜'}</span>
+    <span style="text-decoration:${done?'line-through':'none'};color:${done?'var(--text-dim)':'var(--text)'};">${escapeHtml(item)}</span>
+  </div>`;}).join('')}
+  </div>
+</div>`;}
 async function uploadDocument(){if(!editingDealId){toast('Save the deal first before uploading documents');return;}const file=$('docFile').files[0];if(!file){toast('Select a file first');return;}if(file.size>10485760){toast('File too large (max 10MB)');return;}const category=$('docCategory').value;toast('Uploading...');try{const path=`${editingDealId}/${Date.now()}_${file.name}`;const{error:upErr}=await supabaseClient.storage.from('deal-documents').upload(path,file);if(upErr){toast('Upload failed: '+upErr.message);return;}const{error:dbErr}=await supabaseClient.from('documents').insert({deal_id:editingDealId,file_name:file.name,storage_path:path,file_type:file.type,file_size_bytes:file.size,category:category});if(dbErr){toast('Record failed: '+dbErr.message);return;}toast('Document uploaded');$('docFile').value='';await refreshTable('documents');renderDealDocsInModal(editingDealId);}catch(e){console.error(e);toast('Upload error: '+e.message);}}
 async function deleteDocument(id,path){if(!confirm('Delete this document?'))return;try{const{error:delErr}=await supabaseClient.storage.from('deal-documents').remove([path]);if(delErr)console.error('Storage delete',delErr);const{error:dbErr}=await supabaseClient.from('documents').delete().eq('id',id);if(dbErr){toast('Delete failed: '+dbErr.message);return;}documents=documents.filter(d=>d.id!==id);renderDealDocsInModal(editingDealId);if(currentTab==='pipeline')renderPipeline();toast('Document deleted');}catch(e){console.error(e);toast('Delete error: '+e.message);}}
 $('btnUploadDoc').addEventListener('click',uploadDocument);
@@ -834,7 +934,24 @@ function doSignOut(){localStorage.removeItem('3e_session');localStorage.removeIt
 
 function renderAll(){renderDashboard();renderBoard();renderPipeline();renderLenders();renderDealers();renderCustomers();renderQueue();renderSettings();renderEmailTemplates();renderAnalytics();}
 
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('dealModal');closeModal('lenderModal');closeModal('dealerModal');}if(e.key==='n'&&e.ctrlKey){e.preventDefault();openDealModal();}});
+function doGlobalSearch(q){
+  const bar=$('globalSearchBar');const results=$('globalSearchResults');
+  if(!q.trim()){bar.style.display='none';results.style.display='none';return;}
+  bar.style.display='block';results.style.display='block';
+  const term=q.toLowerCase();
+  const dealResults=deals.filter(d=>!d.deleted_at).filter(d=>(d.prospect_name||'').toLowerCase().includes(term)||(d.business_name||'').toLowerCase().includes(term)||(d.state_code||'').toLowerCase().includes(term)).slice(0,5).map(d=>({type:'deal',id:d.id,label:`${escapeHtml(d.prospect_name)}${d.business_name?' · '+escapeHtml(d.business_name):''}`,sub:`${statusBadge(d.status)} · ${fmtMoney(d.amount_requested)} · ${escapeHtml(d.state_code||'—')}`,action:()=>{goToTab('pipeline');editingDealId=d.id;renderPipeline();}}));
+  const lenderResults=lenders.filter(l=>(l.name||'').toLowerCase().includes(term)).slice(0,3).map(l=>({type:'lender',id:l.id,label:escapeHtml(l.name),sub:`${fmtMoney(l.amount_min)}–${fmtMoney(l.amount_max)} · ${l.credit_band_floor||'—'}`,action:()=>goToTab('lenders')}));
+  const dealerResults=dealers.filter(d=>(d.business_name||'').toLowerCase().includes(term)||(d.contact_name||'').toLowerCase().includes(term)).slice(0,3).map(d=>({type:'dealer',id:d.id,label:escapeHtml(d.business_name),sub:`${escapeHtml(d.contact_name||'')} · ${escapeHtml(d.vertical||'—')}`,action:()=>goToTab('dealers')}));
+  const all=[...dealResults,...lenderResults,...dealerResults];
+  if(all.length===0){results.innerHTML=`<div class="empty-state" style="padding:20px;"><div class="empty-title">No results</div></div>`;return;}
+  results.innerHTML=all.map(r=>`<div onclick="globalSearchGo(this)" data-type="${r.type}" data-id="${r.id}" style="padding:8px 14px;cursor:pointer;border-bottom:1px solid var(--border);">
+    <div style="font-weight:600;font-size:13px;">${r.label}</div>
+    <div style="font-size:12px;color:var(--text-dim);">${r.sub}</div>
+  </div>`).join('');
+  all.forEach((r,i)=>{const el=results.children[i];if(el)el.onclick=()=>{r.action();results.style.display='none';bar.style.display='none';$('globalSearchInput').value='';}});
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('dealModal');closeModal('lenderModal');closeModal('dealerModal');$('globalSearchBar').style.display='none';$('globalSearchResults').style.display='none';$('globalSearchInput').value='';}if(e.key==='n'&&e.ctrlKey){e.preventDefault();openDealModal();}if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();$('globalSearchBar').style.display=$('globalSearchBar').style.display==='none'||!$('globalSearchBar').style.display?'block':'none';if($('globalSearchBar').style.display==='block')setTimeout(()=>$('globalSearchInput').focus(),50);}});
 
 </script>
 </body>
