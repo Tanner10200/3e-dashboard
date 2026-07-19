@@ -47,6 +47,121 @@ function openEmailComposer(key){const t=EMAIL_TEMPLATES.find(x=>x.key===key);if(
   toast('Email composer opened');
 }
 
+function renderAnalytics(){
+  if(!isConnected||currentTab!=='analytics')return;
+  const active=deals.filter(d=>!d.deleted_at);
+  const total=active.length;
+  const funded=active.filter(d=>d.status==='funded'||d.status==='commission_paid').length;
+  const lost=active.filter(d=>d.status==='closed_lost').length;
+  const pipelineValue=active.filter(d=>!['funded','commission_paid','closed_lost','do_not_contact'].includes(d.status)).reduce((s,d)=>s+Number(d.amount_requested||0),0);
+  const commissionTotal=active.reduce((s,d)=>s+Number(d.commission_amount||0),0);
+  const winRate=total>0?Math.round((funded/total)*100):0;
+  const avgDealSize=total>0?Math.round(active.reduce((s,d)=>s+Number(d.amount_requested||0),0)/total):0;
+  $('analyticsStats').innerHTML=`<div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total Deals</div></div>
+    <div class="stat-card"><div class="stat-num is-money">${fmtMoney(pipelineValue)}</div><div class="stat-label">Pipeline Value</div></div>
+    <div class="stat-card"><div class="stat-num">${winRate}%</div><div class="stat-label">Win Rate</div></div>
+    <div class="stat-card"><div class="stat-num is-money">${fmtMoney(avgDealSize)}</div><div class="stat-label">Avg Deal Size</div></div>
+    <div class="stat-card"><div class="stat-num is-money">${fmtMoney(commissionTotal)}</div><div class="stat-label">Total Commission</div></div>
+    <div class="stat-card"><div class="stat-num">${funded}</div><div class="stat-label">Funded Deals</div></div>`;
+  const funnelStages=DEAL_STATUS_ORDER.filter(s=>s!=='do_not_contact');
+  const funnel=funnelStages.map(s=>{const count=active.filter(d=>d.status===s).length;const amount=active.filter(d=>d.status===s).reduce((sum,d)=>sum+Number(d.amount_requested||0),0);return{status:s,count,amount};});
+  const maxAmt=Math.max(...funnel.map(f=>f.amount),1);
+  const firstStageCount=funnel[0]?.count||1;
+  $('analyticsFunnel').innerHTML=funnel.map((f,idx)=>{
+    const prevCount=idx>0?funnel[idx-1].count:firstStageCount;
+    const conversion=idx>0&&prevCount>0?Math.round((f.count/prevCount)*100):100;
+    const pct=Math.round((f.amount/maxAmt)*100);
+    const totalPct=Math.round((f.count/total)*100);
+    return`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <div style="width:130px;font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;flex-shrink:0;">${DEAL_STATUS_LABELS[f.status]}</div>
+      <div style="flex:1;background:var(--surface-hover);border-radius:4px;height:20px;overflow:hidden;">
+        <div style="height:100%;border-radius:4px;background:${statusColor(f.status)};width:${pct}%;transition:width .3s;"></div>
+      </div>
+      <div style="width:160px;text-align:right;font-family:var(--font-mono);font-size:12px;flex-shrink:0;">
+        ${f.count} · ${fmtMoney(f.amount)} · ${totalPct}% · ${conversion}% cv
+      </div>
+    </div>`;
+  }).join('');
+  const months=[];const now=new Date();
+  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({label:d.toLocaleString('en-US',{month:'short'}),year:d.getFullYear(),key:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`});}
+  const monthly=months.map(m=>{const created=deals.filter(d=>{const c=new Date(d.created_at);return`${c.getFullYear()}-${String(c.getMonth()+1).padStart(2,'0')}`===m.key}).length;const fundedM=deals.filter(d=>{const c=d.commission_paid_at||d.status_changed_at;if(!c)return false;const f=new Date(c);return d.status==='funded'||d.status==='commission_paid'?>`${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,'0')}`===m.key:false;}).length;const comm=deals.filter(d=>{const c=d.commission_paid_at;if(!c)return false;const f=new Date(c);return`${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,'0')}`===m.key;}).reduce((s,d)=>s+Number(d.commission_amount||0),0);return{...m,created,funded:fundedM,comm};});
+  const maxCreated=Math.max(...monthly.map(m=>m.created),1);
+  const maxComm=Math.max(...monthly.map(m=>m.comm),1);
+  $('analyticsTrend').innerHTML=monthly.map(m=>`<div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:10px;">
+    <div style="width:50px;font-size:12px;color:var(--text-dim);flex-shrink:0;">${m.label}</div>
+    <div style="flex:1;display:flex;gap:4px;align-items:flex-end;">
+      <div style="width:12px;background:var(--ledger);border-radius:3px;height:${Math.max(4,Math.round((m.created/maxCreated)*80))}px;" title="${m.created} deals created"></div>
+      <div style="width:12px;background:var(--success);border-radius:3px;height:${m.funded>0?Math.max(4,Math.round((m.funded/maxCreated)*80)):0}px;" title="${m.funded} funded"></div>
+      <div style="width:12px;background:var(--warning);border-radius:3px;height:${m.comm>0?Math.max(4,Math.round((m.comm/maxComm)*80)):0}px;" title="${fmtMoney(m.comm)} commission"></div>
+    </div>
+    <div style="width:90px;text-align:right;font-family:var(--font-mono);font-size:11px;flex-shrink:0;color:var(--text-dim);">${m.created} · ${fmtMoney(m.comm)}</div>
+  </div>`).join('')+
+  `<div style="display:flex;gap:12px;margin-top:8px;font-size:11px;color:var(--text-dim);">
+    <span><span style="display:inline-block;width:8px;height:8px;background:var(--ledger);border-radius:2px;"></span> Created</span>
+    <span><span style="display:inline-block;width:8px;height:8px;background:var(--success);border-radius:2px;"></span> Funded</span>
+    <span><span style="display:inline-block;width:8px;height:8px;background:var(--warning);border-radius:2px;"></span> Commission</span>
+  </div>`;
+  const agentPerf=agents.map(a=>{
+    const actions=agentActions.filter(x=>x.agent_id===a.id);
+    const created=actions.length;
+    const approved=actions.filter(x=>x.status==='approved').length;
+    const declined=actions.filter(x=>x.status==='declined').length;
+    const approvalRate=created>0?Math.round((approved/created)*100):0;
+    const creditsUsed=a.credits_used_month||0;
+    const creditsLimit=a.credits_limit_month||1;
+    const creditsPct=Math.round((creditsUsed/creditsLimit)*100);
+    return{name:a.display_name||a.name,created,approved,declined,approvalRate,creditsUsed,creditsLimit,creditsPct,isActive:a.is_active};
+  }).sort((a,b)=>b.created-a.created);
+  $('analyticsAgents').innerHTML=agentPerf.length?
+    `<table style="width:100%;font-size:12px;"><thead><tr><th>Agent</th><th style="text-align:center;">Actions</th><th style="text-align:center;">Approved</th><th style="text-align:center;">Rate</th><th style="text-align:center;">Credits</th></tr></thead><tbody>${agentPerf.map(a=>`<tr><td>${escapeHtml(a.name)} ${a.isActive?'<span style="color:var(--success);">●</span>':'<span style="color:var(--text-muted);">●</span>'}</td><td style="text-align:center;">${a.created}</td><td style="text-align:center;">${a.approved}</td><td style="text-align:center;">${a.approvalRate}%</td><td style="text-align:center;"><div style="display:flex;align-items:center;gap:4px;"><div style="flex:1;background:var(--surface-hover);border-radius:2px;height:6px;"><div style="height:100%;background:var(--ledger);border-radius:2px;width:${a.creditsPct}%;"></div></div><span style="font-size:10px;">${a.creditsUsed}/${a.creditsLimit}</span></div></td></tr>`).join('')}</tbody></table>`:
+    '<div class="empty-state"><div class="empty-title">No agent data yet</div></div>';
+  const velocityStages=funnelStages.filter(s=>!['funded','commission_paid','closed_lost','do_not_contact'].includes(s));
+  $('analyticsVelocity').innerHTML=velocityStages.map(s=>{
+    const stageDeals=active.filter(d=>d.status===s);
+    const avgDays=stageDeals.length>0?Math.round(stageDeals.reduce((sum,d)=>{const days=daysSince(d.status_changed_at);return sum+(days<Infinity?days:0);},0)/stageDeals.length):0;
+    return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:12px;color:var(--text-dim);">${DEAL_STATUS_LABELS[s]}</span>
+      <span style="font-family:var(--font-mono);font-size:12px;">${avgDays}d avg · ${stageDeals.length} deals</span>
+    </div>`;
+  }).join('');
+  const lenderDeals=lenders.map(l=>{const count=active.filter(d=>d.lender_id===l.id).length;const amount=active.filter(d=>d.lender_id===l.id).reduce((s,d)=>s+Number(d.amount_requested||0),0);return{name:l.name,count,amount};}).sort((a,b)=>b.count-a.count).slice(0,5);
+  $('analyticsLenders').innerHTML=lenderDeals.length?
+    lenderDeals.map((l,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim);">#${i+1}</span> <span style="font-weight:600;font-size:13px;">${escapeHtml(l.name)}</span></div>
+      <span style="font-family:var(--font-mono);font-size:12px;">${l.count} · ${fmtMoney(l.amount)}</span>
+    </div>`).join(''):
+    '<div class="empty-state"><div class="empty-title">No lender data yet</div></div>';
+  const dealerDeals=dealers.map(d=>{const count=active.filter(deal=>deal.dealer_id===d.id).length;const amount=active.filter(deal=>deal.dealer_id===d.id).reduce((s,deal)=>s+Number(deal.amount_requested||0),0);return{name:d.business_name,count,amount};}).sort((a,b)=>b.count-a.count).slice(0,5);
+  $('analyticsDealers').innerHTML=dealerDeals.length?
+    dealerDeals.map((d,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim);">#${i+1}</span> <span style="font-weight:600;font-size:13px;">${escapeHtml(d.name)}</span></div>
+      <span style="font-family:var(--font-mono);font-size:12px;">${d.count} · ${fmtMoney(d.amount)}</span>
+    </div>`).join(''):
+    '<div class="empty-state"><div class="empty-title">No dealer data yet</div></div>';
+  const winLossData={won:funded,lost:lost,pending:total-funded-lost};
+  $('analyticsWinLoss').innerHTML=`<div style="display:flex;align-items:center;gap:16px;margin-top:10px;">
+    <div style="text-align:center;"><div style="font-size:32px;font-weight:700;color:var(--success);">${funded}</div><div style="font-size:12px;color:var(--text-dim);">Won</div></div>
+    <div style="text-align:center;"><div style="font-size:32px;font-weight:700;color:var(--danger);">${lost}</div><div style="font-size:12px;color:var(--text-dim);">Lost</div></div>
+    <div style="text-align:center;"><div style="font-size:32px;font-weight:700;color:var(--warning);">${winLossData.pending}</div><div style="font-size:12px;color:var(--text-dim);">Pending</div></div>
+  </div>
+  <div style="margin-top:16px;height:8px;background:var(--surface-hover);border-radius:4px;overflow:hidden;display:flex;">
+    <div style="height:100%;background:var(--success);width:${total>0?(funded/total)*100:0}%;"></div>
+    <div style="height:100%;background:var(--danger);width:${total>0?(lost/total)*100:0}%;"></div>
+    <div style="height:100%;background:var(--warning);width:${total>0?(winLossData.pending/total)*100:0}%;"></div>
+  </div>`;
+  const creditDist={excellent:0,good:0,fair:0,poor:0,unknown:0};
+  active.forEach(d=>{const s=d.credit_score||calcCreditScore(d).score;let b='unknown';if(s>=80)b='excellent';else if(s>=60)b='good';else if(s>=40)b='fair';else if(s>0)b='poor';creditDist[b]++;});
+  const maxCredit=Math.max(...Object.values(creditDist),1);
+  const creditLabels={excellent:'80-100',good:'60-79',fair:'40-59',poor:'0-39',unknown:'N/A'};
+  const creditColors={excellent:'var(--success)',good:'var(--ledger)',fair:'var(--warning)',poor:'var(--danger)',unknown:'var(--text-muted)'};
+  $('analyticsCreditDist').innerHTML=`<div style="display:flex;align-items:flex-end;gap:8px;height:120px;margin-top:10px;">${Object.entries(creditDist).map(([k,v])=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+    <div style="width:100%;background:var(--surface-hover);border-radius:4px;height:100px;position:relative;">
+      <div style="position:absolute;bottom:0;left:0;right:0;background:${creditColors[k]};border-radius:4px;height:${Math.round((v/maxCredit)*100)}%;transition:height .3s;"></div>
+    </div>
+    <div style="font-size:10px;color:var(--text-dim);text-align:center;">${creditLabels[k]}<br>${v}</div>
+  </div>`).join('')}</div>`;
+}
+
 // ========== CREDIT SCORE CHART ==========
 function renderCreditChart(){
   const active=deals.filter(d=>d.status!=='funded'&&d.status!=='commission_paid'&&d.status!=='closed_lost'&&d.status!=='do_not_contact');
@@ -203,6 +318,7 @@ td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}tr:hov
     <div class="nav-item" data-tab="lenders"><span class="nav-icon">◈</span>Lenders</div>
     <div class="nav-item" data-tab="dealers"><span class="nav-icon">◈</span>Dealers</div>
     <div class="nav-item" data-tab="customers"><span class="nav-icon">◈</span>Customers</div>
+    <div class="nav-item" data-tab="analytics"><span class="nav-icon">◈</span>Analytics</div>
     <div class="nav-item" data-tab="queue"><span class="nav-icon">◈</span>Queue <span id="queueBadge" style="display:none;background:var(--danger);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:auto;"></span></div>
     <div class="nav-item" data-tab="settings"><span class="nav-icon">◈</span>Settings</div>
     <div class="sidebar-footer" id="clock"></div>
@@ -277,6 +393,28 @@ td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}tr:hov
     <div class="tab-section" id="tab-customers">
       <div class="page-header"><div><div class="eyebrow">Prospects</div><h1>Customers</h1></div></div>
       <div id="customersList"></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="tab-section" id="tab-analytics">
+      <div class="page-header"><div><div class="eyebrow">Performance</div><h1>Analytics</h1></div></div>
+      <div class="stat-grid" id="analyticsStats"></div>
+      <div class="panel"><div class="panel-title">Pipeline Funnel</div><div id="analyticsFunnel"></div></div>
+      <div class="panel"><div class="panel-title">Monthly Trend (Last 6 Months)</div><div id="analyticsTrend"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="panel"><div class="panel-title">Agent Performance</div><div id="analyticsAgents"></div></div>
+        <div class="panel"><div class="panel-title">Deal Velocity (Avg Days)</div><div id="analyticsVelocity"></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="panel"><div class="panel-title">Top Lenders</div><div id="analyticsLenders"></div></div>
+        <div class="panel"><div class="panel-title">Top Dealers</div><div id="analyticsDealers"></div></div>
+      </div>
+      <div class="panel"><div class="panel-title">Win / Loss & Credit Distribution</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+          <div id="analyticsWinLoss"></div>
+          <div id="analyticsCreditDist"></div>
+        </div>
+      </div>
     </div>
 
     <!-- QUEUE -->
@@ -694,7 +832,7 @@ async function triggerAgent(agentName){
 }
 function doSignOut(){localStorage.removeItem('3e_session');localStorage.removeItem('3e_supabase_url');localStorage.removeItem('3e_supabase_key');location.reload();}
 
-function renderAll(){renderDashboard();renderBoard();renderPipeline();renderLenders();renderDealers();renderCustomers();renderQueue();renderSettings();renderEmailTemplates();}
+function renderAll(){renderDashboard();renderBoard();renderPipeline();renderLenders();renderDealers();renderCustomers();renderQueue();renderSettings();renderEmailTemplates();renderAnalytics();}
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('dealModal');closeModal('lenderModal');closeModal('dealerModal');}if(e.key==='n'&&e.ctrlKey){e.preventDefault();openDealModal();}});
 
