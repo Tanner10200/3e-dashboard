@@ -348,6 +348,9 @@ td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}tr:hov
       </div>
       <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;">Hint: starts with 3E, ends with !</div>
       <div id="loginStatus"></div>
+      <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
+        <button class="btn-ghost btn-sm" onclick="forceLogout()" style="font-size:11px;">🔄 Reset Session / Force Login</button>
+      </div>
     </div>
 
     <!-- DASHBOARD -->
@@ -675,6 +678,7 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const LOGIN_PASSWORD='3E2026!';
 
 function togglePasswordVisibility(){const el=$('loginPassword');el.type=el.type==='password'?'text':'password';}
+function forceLogout(){localStorage.removeItem('3e_session');$('loginPanel').style.display='block';document.querySelectorAll('.tab-section').forEach(s=>s.style.display='none');const status=$('loginStatus');if(status)status.innerHTML='<div style="text-align:center;color:var(--text-dim);font-size:13px;">Session cleared. Try logging in again.</div>';}
 
 async function doLogin(){
   const pw=$('loginPassword').value.trim(),status=$('loginStatus');
@@ -697,9 +701,18 @@ async function doConnect(){
 }
 
 // Auto-connect from session
-(function autoConnect(){
-  const session=localStorage.getItem('3e_session');
-  if(session){$('loginPanel').style.display='none';doConnect();}
+(async function autoConnect(){
+  try{
+    const session=localStorage.getItem('3e_session');
+    if(!session)return;
+    $('loginPanel').style.display='none';
+    await doConnect();
+  }catch(err){
+    console.error('Auto-connect failed:',err);
+    $('loginPanel').style.display='block';
+    const status=$('loginStatus');
+    if(status)status.innerHTML='<div class="error" style="text-align:center;">⚠ Previous session failed. Please try again.</div>';
+  }
 })();
 
 function tickClock(){const n=new Date();const el=$('clock');if(el)el.textContent=n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});}
