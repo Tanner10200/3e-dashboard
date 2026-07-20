@@ -662,7 +662,7 @@ function renderLenderMatchPreview(dealId){
       <div style="display:flex;align-items:center;gap:10px;">
         <div style="display:flex;align-items:center;gap:4px;">
           <div style="width:60px;height:6px;background:var(--surface-hover);border-radius:3px;overflow:hidden;">
-            <div style="height:100%;background:${r.score>=70?'var(--success)':r.score>=40?'var(--warning)':'var(--danger)';border-radius:3px;width:${r.score}%;"></div>
+            <div style="height:100%;background:${r.score>=70?'var(--success)':r.score>=40?'var(--warning)':'var(--danger)'};border-radius:3px;width:${r.score}%;"></div>
           </div>
           <span style="font-family:var(--font-mono);font-size:10px;">${r.score}/100</span>
         </div>
