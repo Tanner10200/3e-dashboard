@@ -6,7 +6,7 @@
 <title>3E Command Center</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 // ========== RENDER: KANBAN BOARD ==========
 function renderBoard(){
@@ -678,18 +678,27 @@ const SUPABASE_URL='https://dmcuqawpteypgfcgrwdl.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtY3VxYXdwdGV5cGdmY2dyd2RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzNDc0NDAsImV4cCI6MjA5OTkyMzQ0MH0.-tPVYhRCE9JyCOLHFrgQz4KLhNawtdQcL4z3WGJTyN4';
 const LOGIN_PASSWORD='3E2026!';
 
+// Debug / bypass URL params
+const urlParams=new URLSearchParams(location.search);
+const BYPASS_LOGIN=urlParams.has('bypass');
+const DEBUG_MODE=urlParams.has('debug');
+
 function togglePasswordVisibility(){const el=$('loginPassword');el.type=el.type==='password'?'text':'password';}
-function forceLogout(){localStorage.removeItem('3e_session');$('loginPanel').style.display='block';document.querySelectorAll('.tab-section').forEach(s=>s.style.display='none');const status=$('loginStatus');if(status)status.innerHTML='<div style="text-align:center;color:var(--text-dim);font-size:13px;">Session cleared. Try logging in again.</div>';}
+function forceLogout(){localStorage.removeItem('3e_session');location.href=location.pathname;}
 
 async function doLogin(){
-  const pw=$('loginPassword').value.trim(),status=$('loginStatus');
-  if(pw!==LOGIN_PASSWORD){status.innerHTML='<div class="error" style="text-align:center;">❌ Invalid password. Try again.</div>';console.log('Password rejected. Expected:',LOGIN_PASSWORD,'Got:',pw);return;}
+  const pw=$('loginPassword').value.trim().replace(/\s/g,''),status=$('loginStatus');
+  if(pw.toLowerCase()!==LOGIN_PASSWORD.toLowerCase()){status.innerHTML='<div class="error" style="text-align:center;">❌ Invalid password. Try again.</div>';console.log('Password rejected. Expected:',LOGIN_PASSWORD,'Got:',pw);return;}
   status.innerHTML='<div style="text-align:center;color:var(--ledger);font-size:13px;">🔄 Connecting...</div>';
   localStorage.setItem('3e_session','auth_'+Date.now());
-  try{await doConnect();}catch(err){status.innerHTML='<div class="error" style="text-align:center;">❌ Connection failed: '+err.message+'</div>';console.error('doConnect error:',err);}
+  try{await doConnect();}catch(err){status.innerHTML='<div class="error" style="text-align:center;">❌ Connection failed: '+escapeHtml(err.message)+'</div>';console.error('doConnect error:',err);}
 }
 
 async function doConnect(){
+  if(!window.supabase||!window.supabase.createClient){
+    console.error('window.supabase not available. CDN may have failed to load.');
+    throw new Error('Supabase client not loaded. Check internet connection or try a different browser.');
+  }
   try{
     const {createClient}=window.supabase;supabaseClient=createClient(SUPABASE_URL,SUPABASE_KEY);
     const {data,error}=await supabaseClient.from('agents').select('count').limit(1);
@@ -701,9 +710,10 @@ async function doConnect(){
   }catch(err){throw err;}
 }
 
-// Auto-connect from session
+// Auto-connect from session or bypass
 (async function autoConnect(){
   try{
+    if(BYPASS_LOGIN){console.log('Login bypassed via URL param');$('loginPanel').style.display='none';await doConnect();return;}
     const session=localStorage.getItem('3e_session');
     if(!session)return;
     $('loginPanel').style.display='none';
@@ -712,7 +722,7 @@ async function doConnect(){
     console.error('Auto-connect failed:',err);
     $('loginPanel').style.display='block';
     const status=$('loginStatus');
-    if(status)status.innerHTML='<div class="error" style="text-align:center;">⚠ Previous session failed. Please try again.</div>';
+    if(status)status.innerHTML='<div class="error" style="text-align:center;">⚠ '+escapeHtml(err.message)+'<br><button class="btn-ghost btn-sm" onclick="forceLogout()" style="margin-top:8px;">Reset Session</button></div>';
   }
 })();
 
