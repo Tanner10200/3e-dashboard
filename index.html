@@ -339,12 +339,14 @@ td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}tr:hov
     <div id="loginPanel" class="config-banner" style="text-align:center;max-width:400px;margin:60px auto;">
       <div class="cfg-title" style="font-size:18px;margin-bottom:8px;">🔐 3E Command Center</div>
       <div style="font-size:13px;color:var(--text-dim);margin-bottom:18px;">Enter your password to access the dashboard</div>
-      <div class="config-row" style="justify-content:center;">
-        <input type="password" id="loginPassword" placeholder="Password" style="flex:none;width:220px;text-align:center;" onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="config-row" style="justify-content:center;position:relative;">
+        <input type="password" id="loginPassword" placeholder="Password" style="flex:none;width:220px;text-align:center;padding-right:32px;" onkeydown="if(event.key==='Enter')doLogin()">
+        <button type="button" onclick="togglePasswordVisibility()" style="position:absolute;right:calc(50% - 100px);top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:14px;padding:4px;">👁</button>
       </div>
       <div class="config-row" style="justify-content:center;margin-bottom:4px;">
-        <button onclick="doLogin()">Enter</button>
+        <button class="btn" onclick="doLogin()" style="width:220px;">Enter</button>
       </div>
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;">Hint: starts with 3E, ends with !</div>
       <div id="loginStatus"></div>
     </div>
 
@@ -672,24 +674,26 @@ const SUPABASE_URL='https://dmcuqawpteypgfcgrwdl.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtY3VxYXdwdGV5cGdmY2dyd2RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzNDc0NDAsImV4cCI6MjA5OTkyMzQ0MH0.-tPVYhRCE9JyCOLHFrgQz4KLhNawtdQcL4z3WGJTyN4';
 const LOGIN_PASSWORD='3E2026!';
 
+function togglePasswordVisibility(){const el=$('loginPassword');el.type=el.type==='password'?'text':'password';}
+
 async function doLogin(){
   const pw=$('loginPassword').value.trim(),status=$('loginStatus');
-  if(pw!==LOGIN_PASSWORD){status.innerHTML='<div class="error">Invalid password</div>';return;}
-  status.innerHTML='';
+  if(pw!==LOGIN_PASSWORD){status.innerHTML='<div class="error" style="text-align:center;">❌ Invalid password. Try again.</div>';console.log('Password rejected. Expected:',LOGIN_PASSWORD,'Got:',pw);return;}
+  status.innerHTML='<div style="text-align:center;color:var(--ledger);font-size:13px;">🔄 Connecting...</div>';
   localStorage.setItem('3e_session','auth_'+Date.now());
-  await doConnect();
+  try{await doConnect();}catch(err){status.innerHTML='<div class="error" style="text-align:center;">❌ Connection failed: '+err.message+'</div>';console.error('doConnect error:',err);}
 }
 
 async function doConnect(){
   try{
     const {createClient}=window.supabase;supabaseClient=createClient(SUPABASE_URL,SUPABASE_KEY);
     const {data,error}=await supabaseClient.from('agents').select('count').limit(1);
-    if(error)throw error;
+    if(error){console.error('Supabase ping error:',error);throw error;}
     $('loginPanel').style.display='none';
     document.querySelectorAll('.tab-section').forEach(s=>s.style.removeProperty('display'));
     goToTab('dashboard');isConnected=true;
     await loadAllData();setupRealtime();renderAll();tickClock();setInterval(tickClock,60000);
-  }catch(err){$('loginStatus').innerHTML='<div class="error">✕ '+err.message+'</div>';}
+  }catch(err){throw err;}
 }
 
 // Auto-connect from session
